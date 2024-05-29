@@ -1,5 +1,5 @@
 .layout-spacing {
-    padding-bottom: 25px;
+    padding-bottom: 0px;
 }
 body.minimal .widget {
     padding: 20px;
@@ -287,7 +287,7 @@ body.minimal .widget-one {
 */
 
 body.minimal .widget-chart-two {
-    padding: 0;    
+    padding: 0;
 }
 .widget-chart-two {
     padding: 0;
@@ -448,7 +448,7 @@ body.minimal .widget-chart-two {
     height: 8px;
     top: 5px;
     left: 5px;
-    transform: translateX(-50%); 
+    transform: translateX(-50%);
     border-color: #e0e6ed;
     background: #bfc9d4;
     z-index: 1;
@@ -548,7 +548,7 @@ body.minimal .widget-chart-two {
     min-width: 80px;
     max-width: 80px;
     font-size: 13px;
-    font-weight: 600; 
+    font-weight: 600;
     color: #acb0c3;
     letter-spacing: 1px;
 }
@@ -802,7 +802,7 @@ body.minimal .widget-chart-two {
     margin-left: 10px;
 }
 .widget-table-three .table > thead > tr > th:last-child .th-content {
-    text-align: right; 
+    text-align: right;
     margin-right: 10px;
 }
 .widget-table-three .table > thead > tr > th {

@@ -29,25 +29,28 @@
         <ul class="navbar-item flex-row navbar-dropdown">
             <li class="nav-item dropdown language-dropdown more-dropdown">
                 <div class="dropdown  custom-dropdown-icon">
+
                     <a class="dropdown-toggle btn" href="#" role="button" id="customDropdown" data-toggle="dropdown"
-                        aria-haspopup="true" aria-expanded="false"><img src="{{ asset("img/ca.png") }}" class="flag-width"
+                        aria-haspopup="true" aria-expanded="false"><img src="{{ asset('storage/branch/' . $branchWithCun->photo) }}" class="flag-width"
                             alt="flag"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down">
                             <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg></a>
+                        </svg>
+                    </a>
 
                     <div class="dropdown-menu dropdown-menu-right animated fadeInUp" aria-labelledby="customDropdown">
-                        <a class="dropdown-item" data-img-value="de" data-value="German" href="javascript:void(0);"><img
-                                src="{{ asset("img/de.png") }}" class="flag-width" alt="flag"> Tienda 1</a>
-                        <a class="dropdown-item" data-img-value="jp" data-value="Japanese"
-                            href="javascript:void(0);"><img src="{{ asset("img/de.png") }}" class="flag-width" alt="flag">
-                            Tienda 2</a>
-                        <a class="dropdown-item" data-img-value="fr" data-value="French" href="javascript:void(0);"><img
-                                src="{{ asset("img/de.png") }}" class="flag-width" alt="flag"> Tienda 3</a>
-                        <a class="dropdown-item" data-img-value="ca" data-value="English"
-                            href="javascript:void(0);"><img src="{{ asset("img/de.png") }}" class="flag-width" alt="flag">
-                            Tienda 4</a>
+                        @foreach ($branches as $branch)
+                            @if($branchWithCun->id == $branch->id)
+                                <a class="dropdown-item btn-info" href="javascript:void(0);">
+                                    <img src="storage/branch/{{ $branch->photo }}" class="flag-width" alt="flag"> {{ $branch->company_name }}
+                                </a>
+                            @else
+                                <a class="dropdown-item" href="{{ route('choose_business', $branch->cun) }}">
+                                    <img src="storage/branch/{{ $branch->photo }}" class="flag-width" alt="flag"> {{ $branch->company_name }}
+                                </a>
+                            @endif
+                        @endforeach
                     </div>
                 </div>
             </li>
@@ -166,7 +169,7 @@
                         <div class="media mx-auto">
                             <img src="{{ asset("img/90x90.jpg") }}" class="img-fluid mr-2" alt="avatar">
                             <div class="media-body">
-                                <h5>Nombre Usuario</h5>
+                                <h5>{{ Auth::user()->name }}</h5>
                                 <p>Administrador</p>
                             </div>
                         </div>
@@ -204,7 +207,7 @@
                         </a>
                     </div>
                     <div class="dropdown-item">
-                        <a href="auth_login.html">
+                        <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round" class="feather feather-log-out">
@@ -213,6 +216,15 @@
                                 <line x1="21" y1="12" x2="9" y2="12"></line>
                             </svg> <span>Salir</span>
                         </a>
+
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
+                        {{-- <form id="cambiar-tienda-form" action="{{ route('cambiarsede') }}" method="POST" style="display: none;">
+                            @csrf
+                            <input type="hidden" name="sede" class="sedeSelector" value="">
+                        </form> --}}
+
                     </div>
                 </div>
             </li>

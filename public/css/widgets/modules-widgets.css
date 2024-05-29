@@ -18,7 +18,7 @@
     ===============================
 */
 .layout-spacing {
-  padding-bottom: 30px; }
+  padding-bottom: 0px; }
 
 .widget {
   position: relative;
@@ -739,7 +739,7 @@ body.minimal .widget-five {
     ===========================
 */
 .layout-spacing {
-  padding-bottom: 30px; }
+  padding-bottom: 0px; }
 
 .sales .widget {
   position: relative;

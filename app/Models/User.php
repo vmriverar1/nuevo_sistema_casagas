@@ -3,10 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,14 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'document',
+        'document_type',
+        'phone',
+        'address',
+        'birthday',
+        'photo',
+        'profile',
+        'data'
     ];
 
     /**
@@ -41,5 +50,33 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'last_login' => 'datetime',
+        'data' => 'array',
+        'birthday' => 'date'
     ];
+
+    public function getBirthdayAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d');
+    }
+
+    public function branchesAdmmin()
+    {
+        return $this->belongsToMany(Branch::class, 'admin_branch', 'user_id', 'branch_id')
+                    ->withTimestamps();
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'user_branch', 'user_id', 'branch_id')
+                    ->withPivot('status')
+                    ->withTimestamps();
+    }
+
+    // Relación Many-to-Many con Role
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id')
+                    ->withTimestamps();
+    }
 }

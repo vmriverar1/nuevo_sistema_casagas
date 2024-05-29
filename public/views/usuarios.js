@@ -1,73 +1,134 @@
-$.fn.dataTable.ext.search.push(
-    function( settings, data, dataIndex ) {
-        var min = parseInt( $('#min').val(), 10 );
-        var max = parseInt( $('#max').val(), 10 );
-        var age = parseFloat( data[3] ) || 0; // use data for the age column
+function actualizarListaUsuarios(data) {
+    initializeDataTable('html5-extension', 'users', columns, buttons, tabla_nombre);
+}
 
-        if ( ( isNaN( min ) && isNaN( max ) ) ||
-             ( isNaN( min ) && age <= max ) ||
-             ( min <= age   && isNaN( max ) ) ||
-             ( min <= age   && age <= max ) )
-        {
-            return true;
+const buttons = [
+    {
+        text: 'Crear Usuario',
+        className: 'btn create_users',
+        action: function (e, dt, node, config) {
+
+            $('#modal-users').find('.password').show();
+            $('#modal-users').find('.verify-password').show();
+            $('#modal-users').find('.password').attr('required', 'required').attr('name', 'password');
+            $('#modal-users').find('.verify-password').attr('required', 'required').attr('name', 'verify-password');
+            resetModal('modal-users', 'users', actualizarListaUsuarios);
+            $('#modal-users').modal('show');
         }
-        return false;
     }
-);
+];
 
-$('#html5-extension').DataTable( {
-    dom: '<"row"<"col-md-12"<"row"<"col-md-6"B><"col-md-6"f> > ><"col-md-12"rt> <"col-md-12"<"row"<"col-md-5"i><"col-md-7"p>>> >',
-    buttons: {
-        buttons: [
-            {
-                text: 'Crear usuario',
-                className: 'btn crear_producto',
-                action: function ( e, dt, node, config ) {
-                    // Aquí puedes añadir tu lógica para "Crear producto"
-                    $('#modal-productos').modal('show');
-                }
-            },
-        ]
-    },
-    "oLanguage": {
-        "oPaginate": { "sPrevious": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>', "sNext": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>' },
-        "sInfo": "Página actual _PAGE_ de _PAGES_",
-        "sSearch": '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
-        "sSearchPlaceholder": "Buscar...",
-       "sLengthMenu": "Results :  _MENU_",
-    },
-    "stripeClasses": [],
-    "lengthMenu": [7, 10, 20, 50],
-    "pageLength": 10 ,
-    responsive: true
-} );
+const columns = [
+    { data: 'photo', title:'Foto' },
+    { data: 'role', title:'Rol' },
+    { data: 'name', title:'Nombres' },
+    { data: 'email', title:'Email' },
+    { data: 'document_type', title:'Tipo' },
+    { data: 'document', title:'Doumento' },
+    { data: 'phone', title:'Celular' },
+    { data: 'address', title:'Dirección.' },
+    { data: 'status', title:'Estatus.' },
+];
 
-// ============================================
-//  SELECT 2
-// ============================================
+const tabla_nombre = "users";
 
-$("#select-tienda").select2({
-    tags: true,
-    dropdownParent: $("#modal-productos")
-}).data('select2').$container.addClass('form-control-sm');
+$(document).ready(function() {
+    initializeDataTable('html5-extension', 'users', columns, buttons, actualizarListaUsuarios);
 
+    $('#modal-users').on('change', 'input[name="email"]', function() {
 
-// ============================================
-// PASOS WIZARD
-// ============================================
+        var email = $(this).val();
+        if (!email || !validateEmail(email)) {
+            return;
+        }
 
-$("#circle-basic").steps({
-    headerTag: "h3",
-    bodyTag: "section",
-    transitionEffect: "slideLeft",
-    autoFocus: true,
-    cssClass: 'circle wizard'
+        axios.post('/check-email', {
+            email: email
+        })
+        .then(function(response) {
+            // Manejar la respuesta del servidor
+            if (response.data.exists) {
+                console.log('El email existe en la base de datos. Datos recibidos:', response.data.user);
+                // Aquí puedes manejar la data recibida, por ejemplo, llenar el formulario con los datos del usuario
+                fillUserData(response.data.user);
+            } else {
+                console.log('El email no existe en la base de datos.');
+                // Aquí puedes limpiar los campos del formulario si es necesario
+                clearUserData();
+            }
+        })
+        .catch(function(error) {
+            console.error('Ocurrió un error al verificar el email:', error);
+        });
+    });
+
+    $(document).on("click", ".change_user", function(e){
+        console.info("iniciando");
+        var button = $(this);
+        var userId = button.attr('data');
+        var currentStatus = button.text().trim();
+
+        console.log('Token CSRF:', $('meta[name="csrf-token"]').attr('content'));
+        console.log('Datos enviados:', {
+            user_id: userId,
+            status: currentStatus
+        });
+
+        axios.post('/change-user-status', {
+            user_id: userId,
+            status: currentStatus,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        })
+        .then(function(response) {
+            if (response.data.newBtn) {
+                button.replaceWith(response.data.newBtn);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error updating status:', error);
+        });
+    });
+
+    function validateEmail(email) {
+        var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    function fillUserData(user) {
+        $('#modal-users').find('input[name="password"]').hide();
+        $('#modal-users').find('input[name="verify-password"]').hide();
+        // Llenar los campos del formulario con los datos del usuario
+        $('#modal-users').find('input[name="password"]').val("password");
+        $('#modal-users').find('input[name="verify-password"]').val("password");
+        $('#modal-users').find('input[name="name"]').val(user.name);
+        $('#modal-users').find('select[name="document_type"]').val(user.document_type);
+        $('#modal-users').find('input[name="document"]').val(user.document);
+        $('#modal-users').find('input[name="birthday"]').val(formatDate(user.birthday));
+        $('#modal-users').find('input[name="phone"]').val(user.phone);
+        $('#modal-users').find('input[name="address"]').val(user.address);
+    }
+
+    function clearUserData() {
+        $('#modal-users').find('input[name="password"]').show();
+        $('#modal-users').find('input[name="verify-password"]').show();
+        // Limpiar los campos del formulario
+        $('#modal-users').find('input[name="password"]').val("");
+        $('#modal-users').find('input[name="verify-password"]').val("");
+        $('#modal-users').find('input[name="name"]').val("");
+        $('#modal-users').find('select[name="document_type"]').val("");
+        $('#modal-users').find('input[name="document"]').val("");
+        $('#modal-users').find('input[name="birthday"]').val("");
+        $('#modal-users').find('input[name="phone"]').val("");
+        $('#modal-users').find('input[name="address"]').val("");
+    }
+
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        var year = date.getFullYear();
+        var month = ("0" + (date.getMonth() + 1)).slice(-2);
+        var day = ("0" + date.getDate()).slice(-2);
+        return `${year}-${month}-${day}`;
+    }
 });
 
 
-// ============================================
-//  PREVISUALIZACIÓN DE IMAGENES
-// ============================================
-
-//First upload
-var firstUpload = new FileUploadWithPreview('myFirstImage');

@@ -14,7 +14,7 @@
 <link href="{{ asset("css/authentication/form-1.css") }}" rel="stylesheet" type="text/css" />
 <link rel="stylesheet" type="text/css" href="{{ asset("css/forms/theme-checkbox-radio.css") }}">
 <link rel="stylesheet" type="text/css" href="{{ asset("css/forms/switches.css") }}">
-<link rel="stylesheet" type="text/css" href="{{ asset("css/widgets/modules-widgets.css") }}">    
+<link rel="stylesheet" type="text/css" href="{{ asset("css/widgets/modules-widgets.css") }}">
 
 <!-- BEGIN PAGE LEVEL CUSTOM STYLES -->
 <link rel="stylesheet" type="text/css" href="{{ asset("plugins/table/datatable/datatables.css") }}">
@@ -28,6 +28,17 @@
 <link rel="stylesheet" type="text/css" href="{{ asset("plugins/select2/select2.min.css") }}">
 
 <link href="{{ asset("plugins/file-upload/file-upload-with-preview.min.css") }}" rel="stylesheet" type="text/css" />
+
+
+<link href="{{ asset('css/apps/invoice.css') }}" rel="stylesheet" type="text/css" />
+
+<link href="{{ asset('css/components/tabs-accordian/custom-tabs.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ asset('css/elements/search.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ asset('css/elements/custom-pagination.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ asset('css/elements/infobox.css') }}" rel="stylesheet" type="text/css">
+
+
+<!-- BEGIN PAGE LEVEL STYLES -->
 
 <style>
 
@@ -45,6 +56,14 @@
 
     .select2-container--default.form-control-sm .select2-selection--single .select2-selection__arrow{
         top: 10px !important;
+    }
+
+    .select2-container--default.form-control-sm .select2-selection--single .select2-selection__arrow{
+        right: 5px !important;
+    }
+
+    .error{
+        order: 10900000 !important;
     }
 
     /* .wizard > .content > .body input{

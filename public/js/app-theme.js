@@ -498,3 +498,586 @@ var App = function() {
     }
 
 }();
+
+
+// axios.defaults.withCredentials = true;
+
+// ===========================================
+// TRADUCCIÓN DE VALIDACIONES
+// ===========================================
+
+
+$(document).ready(function() {
+    // Configuración de mensajes de jQuery Validate en español
+    jQuery.extend(jQuery.validator.messages, {
+        required: "Este dato es requerido",
+        remote: "Por favor, rellena este campo.",
+        email: "Por favor, escribe una dirección de correo válida",
+        url: "Por favor, escribe una URL válida.",
+        date: "Por favor, escribe una fecha válida.",
+        dateISO: "Por favor, escribe una fecha (ISO) válida.",
+        number: "Por favor, escribe un número válido.",
+        digits: "Por favor, escribe solo dígitos.",
+        creditcard: "Por favor, escribe un número de tarjeta válido.",
+        equalTo: "Por favor, escribe el mismo valor de nuevo.",
+        extension: "Por favor, escribe un valor con una extensión permitida.",
+        maxlength: jQuery.validator.format("Por favor, no escribas más de {0} caracteres."),
+        minlength: jQuery.validator.format("Por favor, no escribas menos de {0} caracteres."),
+        rangelength: jQuery.validator.format("Por favor, escribe un valor entre {0} y {1} caracteres."),
+        range: jQuery.validator.format("Por favor, escribe un valor entre {0} y {1}."),
+        max: jQuery.validator.format("Por favor, escribe un valor menor o igual a {0}."),
+        min: jQuery.validator.format("Por favor, escribe un valor mayor o igual a {0}.")
+    });
+
+    // Regla personalizada para validar select2 múltiple
+    jQuery.validator.addMethod("select2Required", function(value, element, arg){
+        return $(element).find('option:selected').length > 0;
+    }, "Por favor, selecciona al menos un elemento.");
+});
+
+// ===========================================
+// LIMPIAR MODAL
+// ===========================================
+
+async function destroyComponents($modal) {
+    return new Promise((resolve) => {
+        console.log("Destruyendo componentes...");
+
+        // Destruir wizard
+        var $wizard = $modal.find('.wizard');
+        if ($wizard.length > 0) {
+            $wizard.each(function() {
+                var wizardInstance = $(this);
+                if (wizardInstance.data('steps')) {
+                    console.log("Destruyendo wizard para:", this);
+                    wizardInstance.steps('destroy');
+                }
+            });
+        }
+
+        // Destruir file-upload
+        $modal.find('.custom-file-container').each(function() {
+            var uploadId = $(this).data('upload-id');
+            if (uploadId) {
+                console.log("Destruyendo file-upload para:", this);
+                new FileUploadWithPreview(uploadId).clearPreviewPanel();
+            }
+        });
+
+        // Destruir select2
+        $modal.find(".select2_modal").each(function() {
+            var $this = $(this);
+            console.log($this.hasClass("select2-hidden-accessible"));
+            if ($this.hasClass("select2-hidden-accessible")) {
+                console.log("Destruyendo select2 para:", this);
+                $this.select2('destroy');
+                $(".select2-container").remove();
+            } else {
+                console.log("Select2 no inicializado para:", this);
+            }
+        });
+
+        // destruir botones de Touchsan
+        $(".input-group-prepend").remove();
+        $(".input-group-append").remove();
+
+        console.log("Componentes destruidos.");
+        resolve();
+    });
+}
+
+async function initializeComponents($modal, modalId, route, callback = null, type) {
+    return new Promise((resolve) => {
+        console.log("Inicializando componentes...");
+
+        // Inicializar wizard
+        var $wizard = $modal.find('.wizard');
+        var $form = $modal.find('form');
+        if ($wizard.length > 0) {
+
+            var formValidator = $form.validate({
+                ignore: ":disabled,:hidden",
+                rules: {
+                    password: {
+                        required: true,
+                        minlength: 8
+                    },
+                    "verify-password": {
+                        required: true,
+                        minlength: 8,
+                        equalTo: "input[name='password']"
+                    },
+                    role: {
+                        required: true
+                    },
+                    document_type: {
+                        required: true
+                    },
+                    "categories[]": {
+                        select2Required: true
+                    },
+                    "requirements[]": {
+                        select2Required: true
+                    }
+                },
+                messages: {
+                    password: {
+                        required: "Este dato es requerido",
+                        minlength: "La contraseña debe tener al menos 8 caracteres"
+                    },
+                    "verify-password": {
+                        required: "Este dato es requerido",
+                        minlength: "La contraseña debe tener al menos 8 caracteres",
+                        equalTo: "Las contraseñas no coinciden"
+                    },
+                    role: {
+                        required: "El rol de usuario es requerido"
+                    },
+                    document_type: {
+                        required: "Este dato es requerido"
+                    },
+                    "categories[]": {
+                        select2Required: "Por favor, selecciona al menos una categoría"
+                    },
+                    "requirements[]": {
+                        select2Required: "Por favor, selecciona al menos un requerimiento"
+                    }
+                },
+                errorPlacement: function (error, element) {
+                    error.insertAfter(element);
+                }
+            });
+
+            $form[0].reset();
+            formValidator.resetForm();
+            $form.find('.form-control').removeClass('is-invalid');
+            $form.find('.error').removeClass('error');
+
+            $wizard.each(function() {
+                console.log("Inicializando wizard para:", this);
+                $(this).steps({
+                    headerTag: "h3",
+                    bodyTag: "section",
+                    transitionEffect: "slideLeft",
+                    autoFocus: true,
+                    cssClass: 'circle wizard',
+                    onStepChanging: function (event, currentIndex, newIndex)
+                    {
+                        $form.validate().settings.ignore = ":disabled,:hidden";
+                        return $form.valid();
+                    },
+                    onFinishing: function (event, currentIndex)
+                    {
+                        $form.validate().settings.ignore = ":disabled";
+                        return $form.valid();
+                    },
+                    onFinished: function (event, currentIndex)
+                    {
+                        if (type == "save") {
+                            submitForm(modalId, route, callback);
+                        } else if (type == "update") {
+                            updateForm(modalId, route, callback);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Inicializar file-upload
+        $modal.find('.custom-file-container').each(function() {
+            var uploadId = $(this).data('upload-id');
+            if (uploadId) {
+                console.log("Inicializando file-upload para:", this);
+                new FileUploadWithPreview(uploadId);
+            }
+        });
+
+        // Inicializar select2
+        $modal.find(".select2_modal").each(function() {
+            console.log("Select2 testeo.");
+            var $this = $(this);
+            if ($this.length > 0) {
+                $this.select2({
+                    tags: true,
+                    dropdownParent: $modal // Asegurarse de que el dropdown parent sea el modal actual
+                });
+
+                var select2Instance = $this.data('select2');
+                if (select2Instance) {
+                    select2Instance.$container.addClass('form-control-sm');
+                } else {
+                    console.error("No se pudo inicializar select2 para:", this);
+                }
+            }
+        });
+        console.log("Select2 inicializado.");
+
+        // iniciar botones de Touchspin
+        $(".input_cantidad").TouchSpin({
+            initval: 0
+        });
+
+        $(".input_precio").TouchSpin({
+            prefix: 'S/.',
+            min: 0,
+            max: 100,
+            step: 0.1,
+            decimals: 2,
+            boostat: 5,
+            maxboostedstep: 10,
+            buttondown_class: "btn btn-classic btn-primary",
+            buttonup_class: "btn btn-classic btn-primary"
+        });
+
+        console.log("Componentes inicializados.");
+        resolve();
+    });
+}
+
+async function resetModal(modalId, route, callback = null, type="save") {
+    var $modal = $(`#${modalId}`);
+
+    // Limpiar todos los inputs
+    $modal.find('input').val('');
+    $modal.find('select').val(null).trigger('change');
+
+    $modal.find('input, select, textarea').each(function() {
+        const input = $(this);
+        if (input.attr('type') === 'checkbox') {
+            input.prop('checked', false);
+        } else if (input.attr('type') === 'file') {
+            input.val(null);
+        } else if (input.is('select[multiple]')) {
+            input.val(null).trigger('change');
+        } else {
+            input.val('');
+        }
+    });
+
+    // Fase de destrucción e inicialización
+    await destroyComponents($modal);
+    await initializeComponents($modal, modalId, route, callback, type);
+}
+
+// ===========================================
+// POST DATA
+// ===========================================
+
+/**
+ * Recoge los datos del formulario y los envía a la ruta especificada.
+ *
+ * @param {string} modalId - El ID del modal que contiene el formulario.
+ * @param {string} route - La ruta a la que se enviarán los datos.
+ * @param {function} callback - Una función opcional que se llamará después de una respuesta exitosa.
+ */
+function submitForm(modalId, route, callback = null) {
+    const $modal = $(`#${modalId}`);
+    const formData = new FormData();
+
+    // Recoger los datos del formulario
+    $modal.find('input, select, textarea').each(function() {
+        const input = $(this);
+
+        if (input.attr('type') === 'file') {
+            if (input[0].files.length > 0) {
+                formData.append('photo', input[0].files[0]);
+            }
+        } else if (input.attr('type') === 'checkbox') {
+            formData.append(input.attr('name'), input.prop('checked'));
+        } else if (input.is('select[multiple]')) {
+            const values = input.val();
+            if (values) {
+                values.forEach(value => {
+                    formData.append(input.attr('name') + '[]', value);
+                });
+            }
+        } else {
+            formData.append(input.attr('name'), input.val());
+        }
+    });
+
+    // Enviar los datos utilizando Axios
+    axios.post(route, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+    .then(response => {
+        console.log(response.data);
+        // Cerrar el modal
+        $modal.modal('hide');
+        // Limpiar el modal
+        resetModal(modalId);
+        // Llamar al callback si se proporciona
+        if (callback) {
+            callback(response.data);
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        // Manejar los errores aquí, por ejemplo, mostrar mensajes de error en el modal
+        alert('Ha ocurrido un error. Por favor, inténtelo de nuevo.');
+    });
+}
+
+// // Ejemplo de uso:
+// submitForm('modal-usuarios', '/api/users', (data) => {
+//     console.log('Usuario creado:', data);
+//     // Aquí puedes añadir código para actualizar la lista de usuarios o cualquier otra cosa
+// });
+
+// ===========================================
+// GET DATA
+// ===========================================
+
+/**
+ * Recupera datos de una ruta específica y los ubica en los inputs del modal.
+ *
+ * @param {string} modalId - El ID del modal que contiene el formulario.
+ * @param {string} route - La ruta desde la cual se obtendrán los datos.
+ */
+function fetchDataToModal(modalId, route, callback=null) {
+    const $modal = $(`#${modalId}`);
+    resetModal(modalId, route, callback, "update");
+    axios.get(route)
+        .then(response => {
+            const data = response.data;
+            console.log(data);
+            // Llenar los campos del formulario con los datos del usuario
+            $modal.find('.password').removeAttr('required').attr('name', 'new-password');
+            $modal.find('.verify-password').removeAttr('required').attr('name', 'new-verify-password');
+
+            // Recorrer todos los inputs, selects y textareas dentro del modal
+            $modal.find('input, select, textarea').each(function() {
+                const input = $(this);
+                const name = input.attr('name');
+                console.log({name});
+                if (data.hasOwnProperty(name)) {
+                    if (input.attr('type') === 'file') {
+                        // Los campos de archivo no pueden ser rellenados programáticamente
+                    } else if (input.attr('type') === 'checkbox') {
+                        input.prop('checked', data[name]);
+                    } else {
+                        input.val(data[name]);
+                    }
+
+                    // Si es un select2, necesitamos trigger 'change' para que se actualice visualmente
+                    if (input.hasClass('select2')) {
+                        input.trigger('change');
+                    }
+                }
+            });
+
+            // Manejar campos adicionales, por ejemplo, previsualización de imágenes
+            $modal.find('.custom-file-container').each(function() {
+                const uploadId = $(this).data('upload-id');
+                if (uploadId && data[uploadId]) {
+                    const uploadInstance = new FileUploadWithPreview(uploadId);
+                    uploadInstance.addFiles(data[uploadId]);
+                }
+            });
+
+            $('#'+modalId).modal('show');
+            data['action'] = 'no_tabla';
+            callback(data);
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Ha ocurrido un error al recuperar los datos. Por favor, inténtelo de nuevo.');
+        });
+}
+
+// Ejemplo de uso:
+// fetchDataToModal('modal-usuarios', '/api/users/1');
+
+// $('#edit-user-button').on('click', function() {
+//     fetchDataToModal('modal-usuarios', '/api/users/1');
+//     $('#modal-usuarios').modal('show');
+// });
+
+// ===========================================
+// UPTDATE DATA
+// ===========================================
+
+/**
+ * Recoge los datos del formulario y los envía a la ruta especificada para actualizar información.
+ *
+ * @param {string} modalId - El ID del modal que contiene el formulario.
+ * @param {string} route - La ruta a la que se enviarán los datos.
+ * @param {function} callback - Una función opcional que se llamará después de una respuesta exitosa.
+ */
+function updateForm(modalId, route, callback = null) {
+    const $modal = $(`#${modalId}`);
+    const formData = new FormData();
+    console.log({route});
+
+    // Recoger los datos del formulario
+    $modal.find('input, select, textarea').each(function() {
+        const input = $(this);
+
+        if (input.attr('type') === 'file') {
+            if (input[0].files.length > 0) {
+                formData.append('photo', input[0].files[0]);
+            }
+        } else if (input.attr('type') === 'checkbox') {
+            formData.append(input.attr('name'), input.prop('checked'));
+        } else if (input.is('select[multiple]')) {
+            const values = input.val();
+            if (values) {
+                values.forEach(value => {
+                    formData.append(input.attr('name') + '[]', value);
+                });
+            }
+        } else {
+            formData.append(input.attr('name'), input.val());
+        }
+    });
+
+    // Añadir el método PUT al formulario
+    formData.append('_method', 'PUT');
+
+    // Enviar los datos utilizando Axios
+    axios.post(route, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
+    .then(response => {
+        console.log(response.data);
+        // Cerrar el modal
+        $modal.modal('hide');
+        // Limpiar el modal
+        resetModal(modalId);
+        // Llamar al callback si se proporciona
+        if (callback) {
+            callback(response.data);
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        // Manejar los errores aquí, por ejemplo, mostrar mensajes de error en el modal
+        alert('Ha ocurrido un error. Por favor, inténtelo de nuevo.');
+    });
+}
+
+// Ejemplo de uso:
+// updateForm('modal-usuarios', '/api/users/1', (data) => {
+//     console.log('Usuario actualizado:', data);
+//     // Aquí puedes añadir código para actualizar la lista de usuarios o cualquier otra cosa
+// });
+
+// ===========================================
+// DELETE DATA
+// ===========================================
+
+/**
+ * Envía una solicitud DELETE a la ruta especificada para eliminar datos.
+ *
+ * @param {string} route - La ruta a la que se enviará la solicitud DELETE.
+ * @param {function} callback - Una función opcional que se llamará después de una respuesta exitosa.
+ */
+function deleteData(route, callback = null) {
+    if (confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+        axios.delete(route)
+            .then(response => {
+                console.log(response.data);
+                // Llamar al callback si se proporciona
+                if (callback) {
+                    callback(response.data);
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                // Manejar los errores aquí, por ejemplo, mostrar mensajes de error
+                alert('Ha ocurrido un error. Por favor, inténtelo de nuevo.');
+            });
+    }
+}
+
+// Ejemplo de uso:
+// deleteData('/api/users/1', (data) => {
+//     console.log('Usuario eliminado:', data);
+//     // Aquí puedes añadir código para actualizar la lista de usuarios o cualquier otra cosa
+// });
+
+
+// ===========================================
+// DATA TABLE
+// ===========================================
+
+/**
+ * Inicializa DataTables con datos obtenidos de una API.
+ *
+ * @param {string} tableId - El ID de la tabla HTML.
+ * @param {string} apiRoute - La ruta de la API para obtener los datos.
+ * @param {Array} columns - Un array de objetos de configuración de columnas de DataTables.
+ * @param {Array} buttons - Un array de objetos de configuración de botones de DataTables.
+ */
+function initializeDataTable(tableId, apiRoute, columns, buttons, callback = null) {
+    axios.get(apiRoute)
+        .then(response => {
+            const data = response.data;
+            console.log(data);
+
+            // Destruir la instancia existente de DataTable si ya está inicializada
+            if ($.fn.DataTable.isDataTable(`#${tableId}`)) {
+                $(`#${tableId}`).DataTable().clear().destroy();
+            }
+
+            $(`#${tableId}`).empty(); // Limpiar el contenido de la tabla
+
+            $(`#${tableId}`).DataTable({
+                dom: 'Bfrtip',
+                buttons: buttons,
+                oLanguage: {
+                    oPaginate: {
+                        sPrevious: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>',
+                        sNext: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>'
+                    },
+                    sInfo: "Página actual _PAGE_ de _PAGES_",
+                    sSearch: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="feather feather-search"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+                    sSearchPlaceholder: "Buscar...",
+                    sLengthMenu: "Resultados :  _MENU_",
+                },
+                stripeClasses: [],
+                lengthMenu: [7, 10, 20, 50],
+                pageLength: 7,
+                responsive: true,
+                data: data,
+                columns: [
+                    ...columns,
+                    {
+                        data: null,
+                        title: 'Acciones',
+                        orderable: false,
+                        render: function(data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-dark btn-sm">Acciones</button>
+                                    <button type="button"
+                                        class="btn btn-dark btn-sm dropdown-toggle dropdown-toggle-split"
+                                        id="dropdownMenuReference2" data-toggle="dropdown" aria-haspopup="true"
+                                        aria-expanded="false" data-reference="parent">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="feather feather-chevron-down">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="dropdownMenuReference2">
+                                        <a class="dropdown-item" href="#" onclick="fetchDataToModal('modal-${apiRoute}', '${apiRoute}/${row.id}', ${callback ? callback.name : ''})">Editar</a>
+                                        <a class="dropdown-item eliminar-${apiRoute}" href="#" onclick="deleteData('${apiRoute}/${row.id}', ${callback ? callback.name : ''})">Eliminar</a>
+                                    </div>
+                                </div>`;
+                        }
+                    }
+                ]
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+}
+
+
