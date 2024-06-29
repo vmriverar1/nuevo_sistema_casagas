@@ -54,14 +54,14 @@ class Product extends Model
 
     public function requirements()
     {
-        return $this->belongsToMany(Product::class, 'product_requirements', 'product_id', 'requirement_id')
+        return $this->belongsToMany(Requirement::class, 'product_requirements', 'product_id', 'requirement_id')
                     ->withTimestamps();
     }
 
     public function sales()
     {
-        return $this->belongsToMany(Product::class, 'sale_products', 'sale_id', 'producto_id')
-                    ->withPivot(['quantity'])
+        return $this->belongsToMany(Sale::class, 'sale_products', 'sale_id', 'producto_id')
+                    ->withPivot(['quantity','url'])
                     ->withTimestamps();
     }
 }

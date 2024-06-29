@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('minimum')->default(0);
             $table->enum('type', ['producto', 'servicio', 'paquete'])->default('producto');
             $table->enum('status', ['activo', 'inactivo'])->default('activo');
+            $table->enum('car_registration', ['activo', 'inactivo'])->default('activo');
 
             $table->unsignedBigInteger('branch_id');
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');

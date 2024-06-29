@@ -32,6 +32,7 @@ class ProductFactory extends Factory
             'minimum' => $this->faker->numberBetween(1, 10),
             'type' => $this->faker->randomElement(['producto', 'servicio', 'paquete']),
             'status' => $this->faker->randomElement(['activo', 'inactivo']),
+            'car_registration' => $this->faker->randomElement(['activo', 'inactivo']),
             'branch_id' => $this->faker->numberBetween(1, 10),
             'brand_id' => $this->faker->numberBetween(1, 50),
             'data' => json_encode($this->faker->randomElements())

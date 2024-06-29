@@ -10,7 +10,7 @@ class PettyCash extends Model
     use HasFactory;
 
     protected $fillable = [
-        'responsible',
+        'responsible_id',
         'income',
         'expense',
         'initial',

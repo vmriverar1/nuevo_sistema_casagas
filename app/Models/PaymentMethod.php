@@ -35,15 +35,9 @@ class PaymentMethod extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function requirement()
-    {
-        return $this->belongsTo(Requirement::class);
-    }
-
     public function requirements()
     {
-        return $this->belongsToMany(Product::class, 'product_requirements', 'producto_id', 'requirement_id')
-                    ->withTimestamps();
+        return $this->belongsToMany(Requirement::class, 'payment_requirement', 'payment_methods_id', 'requirement_id');
     }
 
     /**

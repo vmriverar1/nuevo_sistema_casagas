@@ -14,6 +14,16 @@ class Requirement extends Model
         'type',
     ];
 
+    public function setNameAttribute($value)
+    {
+        $this->attributes['name'] = strtolower($value);
+    }
+
+    public function getNameAttribute($value)
+    {
+        return ucwords($value);
+    }
+
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_requirements', 'requirement_id', 'producto_id')

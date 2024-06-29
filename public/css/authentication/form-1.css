@@ -204,3 +204,25 @@ body {
     width: 100%; }
   .form-form .form-container {
     height: 100%; } }
+
+
+.wizard .content section {
+    overflow: scroll;
+    overflow-x: hidden;
+    max-height: 60vh;
+}
+
+.wizard .content section::-webkit-scrollbar {
+    width: 5px;
+}
+
+.wizard .content section::-webkit-scrollbar-thumb {
+    background-color: #1b55e2;
+    border-radius: 10px;
+}
+
+.wizard .content section::-webkit-scrollbar-track {
+    background-color: #f1f2f3;
+}
+
+

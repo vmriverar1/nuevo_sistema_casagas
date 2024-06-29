@@ -18,13 +18,16 @@ class Sale extends Model
         'status',
         'customer_id',
         'seller_id',
-        'net_amount',
+        'amount',
+        'tax',
         'discount',
         'accounting_document_id',
         'total',
         'change',
         'branch_id',
+        'plate_id',
         'petty_cashes_id',
+        'accounting_document_code'
     ];
 
     /**
@@ -33,7 +36,8 @@ class Sale extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'net_amount' => 'decimal:2',
+        'amount' => 'decimal:2',
+        'tax' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
         'change' => 'decimal:2',
@@ -47,6 +51,16 @@ class Sale extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * La relación con el modelo Plate.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function plate()
+    {
+        return $this->belongsTo(UserPlate::class, 'plate_id');
     }
 
     /**
@@ -91,8 +105,14 @@ class Sale extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'sale_products', 'sale_id', 'producto_id')
-                    ->withPivot(['quantity'])
+        return $this->belongsToMany(Product::class, 'sale_products', 'sale_id', 'product_id')
+                    ->withPivot(['quantity','url']);
+    }
+
+    public function discounts()
+    {
+        return $this->belongsToMany(Discount::class, 'sale_discounts', 'sale_id', 'discount_id')
+                    ->withPivot(['total'])
                     ->withTimestamps();
     }
 
@@ -107,5 +127,10 @@ class Sale extends Model
         return $this->belongsToMany(Product::class, 'sale_payment_methods', 'sale_id', 'payment_method_id')
                     ->withPivot(['total', 'data'])
                     ->withTimestamps();
+    }
+
+    public function advances()
+    {
+        return $this->hasMany(SaleAdvance::class);
     }
 }

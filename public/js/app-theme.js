@@ -541,7 +541,6 @@ $(document).ready(function() {
 
 async function destroyComponents($modal) {
     return new Promise((resolve) => {
-        console.log("Destruyendo componentes...");
 
         // Destruir wizard
         var $wizard = $modal.find('.wizard');
@@ -578,10 +577,9 @@ async function destroyComponents($modal) {
         });
 
         // destruir botones de Touchsan
-        $(".input-group-prepend").remove();
-        $(".input-group-append").remove();
+        $modal.find(".input-group-prepend").remove();
+        $modal.find(".input-group-append").remove();
 
-        console.log("Componentes destruidos.");
         resolve();
     });
 }
@@ -710,14 +708,14 @@ async function initializeComponents($modal, modalId, route, callback = null, typ
                 }
             }
         });
-        console.log("Select2 inicializado.");
 
         // iniciar botones de Touchspin
-        $(".input_cantidad").TouchSpin({
+        $modal.find(".input_cantidad").TouchSpin({
             initval: 0
         });
 
-        $(".input_precio").TouchSpin({
+        // input precio
+        $modal.find(".input_precio").TouchSpin({
             prefix: 'S/.',
             min: 0,
             max: 100,
@@ -729,7 +727,6 @@ async function initializeComponents($modal, modalId, route, callback = null, typ
             buttonup_class: "btn btn-classic btn-primary"
         });
 
-        console.log("Componentes inicializados.");
         resolve();
     });
 }
@@ -795,6 +792,14 @@ function submitForm(modalId, route, callback = null) {
             formData.append(input.attr('name'), input.val());
         }
     });
+
+    // ===========================================
+    // CASOS ESPECIALES
+    // ===========================================
+
+    if (route === '/hacer_venta' && typeof caja !== 'undefined') {
+        formData.append('caja', JSON.stringify(caja));
+    }
 
     // Enviar los datos utilizando Axios
     axios.post(route, formData, {

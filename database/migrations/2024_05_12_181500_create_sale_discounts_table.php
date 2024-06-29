@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sale_discount', function (Blueprint $table) {
+        Schema::create('sale_discounts', function (Blueprint $table) {
             $table->unsignedBigInteger('sale_id');
             $table->unsignedBigInteger('discount_id');
 
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('sale_id')->references('id')->on('sales')->onDelete('cascade');
-            $table->foreign('discount_id')->references('id')->on('discount')->onDelete('cascade');
+            $table->foreign('discount_id')->references('id')->on('discounts')->onDelete('cascade');
             $table->primary(['sale_id', 'discount_id']);
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sale_discount');
+        Schema::dropIfExists('sale_discounts');
     }
 };

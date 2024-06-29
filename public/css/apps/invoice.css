@@ -284,8 +284,23 @@ body.minimal .doc-container {
 }
 
 .invoice .content-section {
-    height: calc(100vh - 185px);
+    /* height: calc(100vh - 185px); */
+    min-height: 80vh;
 }
+
+.invoice .invoice-inbox::-webkit-scrollbar {
+    width: 5px;
+}
+
+.invoice .invoice-inbox::-webkit-scrollbar-thumb {
+    background-color: #1b55e2;
+    border-radius: 10px;
+}
+
+.invoice .invoice-inbox::-webkit-scrollbar-track {
+    background-color: #f1f2f3;
+}
+
 
 .invoice .content-section .inv--head-section {
     margin-bottom: 50px;
@@ -498,6 +513,26 @@ body.minimal .doc-container {
     gap: 10px;
     padding: 10px;
     height: 60vh;
+    overflow: overlay;
+}
+
+.lista-productos .tab-content .tab-pane .card-list-body::-webkit-scrollbar {
+    width: 4px !important; /* Ancho del scrollbar vertical */
+    height: 4px !important; /* Altura del scrollbar horizontal */
+}
+
+.lista-productos .tab-content .tab-pane .card-list-body::-webkit-scrollbar-track {
+    background: #f1f1f1 !important;
+    border-radius: 10px !important;
+}
+
+.lista-productos .tab-content .tab-pane .card-list-body::-webkit-scrollbar-thumb {
+    background: #b9b9b9 !important;
+    border-radius: 10px !important;
+}
+
+.lista-productos .tab-content .tab-pane .card-list-body::-webkit-scrollbar-thumb:hover {
+    background: #afafaf !important;
 }
 
 .lista-productos .tab-content .tab-pane .card{
@@ -622,4 +657,263 @@ body.minimal .doc-container {
     .layout-top-spacing {
         margin-top: 37px;
     }
+}
+
+
+/* ==================================== */
+/* NUMBERS */
+/* ==================================== */
+
+
+
+#inspiration {
+    right: 1em;
+    bottom: 1em;
+}
+#inspiration a {
+    display: inline-block;
+    float: left;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    transition: all 1s ease;
+}
+#inspiration a:hover {
+    color: #212121;
+}
+#inspiration p {
+    margin: 0;
+    padding-left: 0.4em;
+    display: inline-block;
+    float: right;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+#pin {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    border-radius: 0.3em;
+    margin: auto;
+}
+
+.dots {
+    width: 50%;
+    display: flex;
+    justify-content: space-around;
+    padding: 1em;
+    padding-top: 3em;
+}
+
+.dot {
+    position: relative;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 0.8em;
+    width: 0.8em;
+    height: 0.8em;
+    transform: scale3d(0.7, 0.7, 0.7);
+}
+.dot.active {
+    -webkit-animation: growDot 0.5s ease;
+            animation: growDot 0.5s ease;
+    -webkit-animation-fill-mode: forwards;
+            animation-fill-mode: forwards;
+}
+.dot.wrong {
+    -webkit-animation: wrong 0.9s ease;
+            animation: wrong 0.9s ease;
+}
+.dot.correct {
+    -webkit-animation: correct 0.9s ease;
+            animation: correct 0.9s ease;
+}
+
+#pin p {
+    font-size: 0.8em;
+}
+
+.numbers {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: center;
+    align-content: flex-end;
+}
+
+.number {
+    position: relative;
+    width: 30%;
+    height: 3em;
+    margin: 5px;
+    border-radius: 2.5em;
+    border: 2px solid rgb(0 176 245 / 46%);
+    text-align: center;
+    line-height: 3em;
+    font-weight: 800;
+    font-size: 2.1em;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    transition: all 0.5s ease;
+}
+.number:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 176, 245);
+}
+
+
+.number.grow:before {
+    -webkit-animation: grow 0.6s ease;
+            animation: grow 0.6s ease;
+}
+
+@-webkit-keyframes growDot {
+    100% {
+    background: white;
+    transform: scale3d(0.9, 0.9, 0.9);
+    }
+}
+
+@keyframes growDot {
+    100% {
+    background: white;
+    transform: scale3d(0.9, 0.9, 0.9);
+    }
+}
+@-webkit-keyframes grow {
+    50% {
+    transform: scale3d(1.5, 1.5, 1.5);
+    }
+    100% {
+    transform: scale3d(1, 1, 1);
+    }
+}
+@keyframes grow {
+    50% {
+    transform: scale3d(1.5, 1.5, 1.5);
+    }
+    100% {
+    transform: scale3d(1, 1, 1);
+    }
+}
+@-webkit-keyframes wrong {
+    20% {
+    background: crimson;
+    }
+    40% {
+    transform: translate(-15px, 0);
+    }
+    60% {
+    transform: translate(10px, 0);
+    }
+    80% {
+    transform: translate(-5px, 0);
+    }
+}
+@keyframes wrong {
+    20% {
+    background: crimson;
+    }
+    40% {
+    transform: translate(-15px, 0);
+    }
+    60% {
+    transform: translate(10px, 0);
+    }
+    80% {
+    transform: translate(-5px, 0);
+    }
+}
+@-webkit-keyframes correct {
+    20% {
+    background: limegreen;
+    }
+    40% {
+    transform: translate(0, -15px);
+    }
+    60% {
+    transform: translate(0, 10px);
+    }
+    80% {
+    transform: translate(0, -5px);
+    }
+}
+@keyframes correct {
+    20% {
+    background: limegreen;
+    }
+    40% {
+    transform: translate(0, -15px);
+    }
+    60% {
+    transform: translate(0, 10px);
+    }
+    80% {
+    transform: translate(0, -5px);
+    }
+}
+@-webkit-keyframes bg-red {
+    50% {
+    background: crimson;
+    }
+}
+@keyframes bg-red {
+    50% {
+    background: crimson;
+    }
+}
+@-webkit-keyframes bg-green {
+    50% {
+    background: limegreen;
+    }
+}
+@keyframes bg-green {
+    50% {
+    background: limegreen;
+    }
+}
+
+
+.input-group-append-copy{
+    display: flex;
+}
+
+#name_client{
+    text-align: center;
+    background-color: #b6ebff;
+    padding: 10px 0px 5px 0px;
+    margin: 0px;
+    border-radius: 10px 10px 0px 0px;
+    font-size: 22px;
+    text-align: center;
+}
+
+#container_cliente_data .error{
+    order: 1 !important;
+}
+
+#container_cliente_data .input-group-append-copy{
+    order: 3 !important;
+}
+
+#container_cliente_data #document_client-error{
+    order: 6 !important;
+}
+
+#div_car_registration  .mb-4{
+    display: flex;
+    flex-direction: column;
+    margin: 0px !important;
+}
+
+#div_car_registration span{
+    margin: 0px !important;
+}
+
+#div_car_registration select{
+    order: 3 !important;
 }

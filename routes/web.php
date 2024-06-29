@@ -3,6 +3,7 @@
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CashController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\UserController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PettyCashController;
+use App\Http\Controllers\UserPlateController;
 use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\PaymentMethodController;
@@ -48,6 +50,7 @@ Route::middleware(['auth', 'check.cun'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('suppliers', SupplierController::class);
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('user-plates', UserPlateController::class);
 
     // ========================================================
     // HOME
@@ -85,12 +88,31 @@ Route::middleware(['auth', 'check.cun'])->group(function () {
     Route::post('/move', [ProductController::class, 'moveProducts'])->name('move');
 
     // ========================================================
-    // ALMACEN
+    // REQUERIMIENTOS
     // ========================================================
 
-    Route::get('/almacen', function () {
-        return view('almacen');
-    })->name('almacen');
+    Route::get('/requerimientos', function () {
+        return view('requerimientos');
+    })->name('requerimientos');
+
+    // ========================================================
+    // CAJA
+    // ========================================================
+    Route::get('/caja', [CashController::class, 'page'])->name('caja');
+    Route::post('/hacer_venta ', [CashController::class, 'hacerVenta']);
+    // -----VENTAS
+    Route::get('/traer-venta/{venta_id}', [CashController::class, 'traerVenta']);
+    // -----PRODUCTOS
+    Route::get('/buscar-productos', [CashController::class, 'buscarProductos']);
+    Route::get('/buscar-servicios', [CashController::class, 'buscarServicios']);
+    Route::get('/buscar-paquetes', [CashController::class, 'buscarPaquetes']);
+    Route::get('/producto/{id}', [CashController::class, 'obtenerProducto']);
+    // -----COMPRAS
+    Route::get('/buscar-compra/{document}', [CashController::class, 'buscarCompra']);
+    Route::get('/traer-compra/{compra_id}', [CashController::class, 'traerCompra']);
+    // -----CLIENTE
+    Route::get('/buscar-cliente/{document}', [CashController::class, 'buscarCliente']);
+    Route::get('/cliente-data/{documento}', [CashController::class, 'buscarClienteDetalle']);
 
 });
 
@@ -114,13 +136,7 @@ Route::middleware(['auth'])->group(function () {
 // Auth::login($user);
 
 
-// ========================================================
-// CAJA
-// ========================================================
 
-Route::get('/caja', function () {
-    return view('caja');
-})->name('caja');
 
 
 

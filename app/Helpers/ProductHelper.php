@@ -71,6 +71,34 @@ class ProductHelper
         return '<button class="btn btn-info edit_brand" data="' . $brand->id . '" style="padding-left: 5px !important; padding-right: 5px !important;">'. $brand->name .'</button>';
     }
 
+    public static function buildPack($product)
+    {
+        $pack = $product->productsInPackage;
+
+        $minPackages = PHP_INT_MAX;
+
+        foreach ($pack as $prod) {
+            if ($prod->type === 'producto') {
+                $stockInStore = $prod->stock;
+            }else{
+                $stockInStore = PHP_INT_MAX;
+            }
+            $minRequired = $prod->pivot->quantity;
+
+            $packagesFromProduct = intdiv($stockInStore, $minRequired);
+
+            if ($packagesFromProduct < $minPackages) {
+                $minPackages = $packagesFromProduct;
+            }
+        }
+
+        if($minPackages > 100000){
+            return '--';
+        }
+
+        return $minPackages;
+    }
+
     public static function lettersInColors($letter)
     {
         $colors = [

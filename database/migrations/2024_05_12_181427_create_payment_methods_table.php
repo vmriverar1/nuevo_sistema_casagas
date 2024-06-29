@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('payment_methods', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255);
-            $table->decimal('commission', 5, 2);
-            $table->unsignedBigInteger('requirement_id');
-            $table->foreign('requirement_id')->references('id')->on('requirements')->onDelete('cascade');
+            $table->decimal('commission', 5, 2)->default(0);
+            $table->enum('status', ['Activado', 'Desactivado'])->default('Activado');
+            $table->enum('type', ['porcentaje', 'fijo'])->default('porcentaje');
 
             $table->unsignedBigInteger('branch_id');
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
-            
+
             $table->timestamps();
         });
     }

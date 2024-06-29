@@ -16,7 +16,6 @@ return new class extends Migration
             $table->unsignedBigInteger('payment_method_id');
 
             $table->decimal('total', 10, 2);
-            $table->text('data');
             $table->timestamps();
 
             $table->foreign('sale_id')->references('id')->on('sales')->onDelete('cascade');

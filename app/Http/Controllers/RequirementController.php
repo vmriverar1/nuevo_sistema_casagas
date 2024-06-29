@@ -61,7 +61,8 @@ class RequirementController extends Controller
      */
     public function destroy(Requirement $requirement)
     {
-        $requirement->update(['status' => 'eliminado']);
+        $requirement->products()->detach();
+        $requirement->delete();
 
         return response()->json(null, 204);
     }

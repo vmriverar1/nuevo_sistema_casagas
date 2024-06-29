@@ -18,11 +18,14 @@ class Purchase extends Model
         'status',
         'supplier_id',
         'seller_id',
-        'net',
+        'amount',
+        'tax',
         'discount',
         'accounting_document_id',
         'total',
         'petty_cashes_id',
+        'accounting_document_code',
+        'car_registration'
     ];
 
     /**
@@ -31,7 +34,8 @@ class Purchase extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'net' => 'decimal:2',
+        'amount' => 'decimal:2',
+        'tax' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
     ];
@@ -88,9 +92,8 @@ class Purchase extends Model
 
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'purchase_products', 'purchase_id', 'producto_id')
-                    ->withPivot(['quantity'])
-                    ->withTimestamps();
+        return $this->belongsToMany(Product::class, 'purchase_products', 'purchase_id', 'product_id')
+                    ->withPivot(['quantity']);
     }
 
     public function requirements()

@@ -45,8 +45,8 @@
 @elseif (request()->routeIs('tiendas'))
     <script src="{{ asset("views/tiendas.js") }}"></script>
 
-@elseif (request()->routeIs('almacen'))
-    <script src="{{ asset("views/almacen.js") }}"></script>
+@elseif (request()->routeIs('requerimientos'))
+    <script src="{{ asset("views/requerimientos.js") }}"></script>
 
 @elseif (request()->routeIs('codigos'))
     <script src="{{ asset("views/codigos.js") }}"></script>
@@ -61,6 +61,9 @@
     <script src="{{ asset("views/clientes.js") }}"></script>
 
 @elseif (request()->routeIs('caja'))
+    <script src="{{ asset("views/caja/funciones.js") }}"></script>
+    <script src="{{ asset("views/caja/objeto.js") }}"></script>
+    <script src="{{ asset("views/caja/listeners.js") }}"></script>
     <script src="{{ asset("views/caja.js") }}"></script>
     <script src="{{ asset("js/apps/invoice.js") }}"></script>
 

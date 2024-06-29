@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 255);
             $table->boolean('electronic_billing');
-            $table->enum('tax_type', ['included in the price', 'add to the price']);
+            $table->enum('tax_type', ['in_price', 'out_price']);
             $table->decimal('sale_percentage', 5, 2);
             $table->string('print_document', 255);
             $table->string('prefix_numbering', 255);

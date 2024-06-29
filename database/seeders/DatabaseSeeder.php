@@ -4,11 +4,13 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Role;
+use App\Models\Sale;
 use App\Models\User;
 use App\Models\Brand;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Purchase;
 use App\Models\Requirement;
 use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
@@ -129,5 +131,229 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        // ==============================================
+        // REQUERIMIENTOS Y PRODUCTOS
+        // ==============================================
+
+        for ($i=0; $i < 100; $i++) {
+            DB::table('product_requirements')->insert([
+                'product_id' => $i+1,
+                'requirement_id' => $faker->numberBetween(1, 20),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // ==============================================
+        // CAJAS CHICAS
+        // ==============================================
+
+        for ($i=0; $i < 35; $i++) {
+            DB::table('petty_cashes')->insert([
+                'responsible_id' => $i+1,
+                'income' => 1000,
+                'expense' => 200,
+                'initial' => 100,
+                'status' => 'abierta',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // ==============================================
+        // DOCUMENTOS CONTABLES
+        // ==============================================
+
+        for ($i=0; $i < 10; $i++) {
+
+            DB::table('accounting_documents')->insert([
+                'name' => 'boleta',
+                'electronic_billing' => false,
+                'tax_type' => 'in_price',
+                'sale_percentage' => 0,
+                'print_document' => '',
+                'prefix_numbering' => 'AA1',
+                'start_numbering' => '1',
+                'branch_id' => $i+1,
+                'mail_shipping' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('accounting_documents')->insert([
+                'name' => 'factura',
+                'electronic_billing' => false,
+                'tax_type' => 'out_price',
+                'sale_percentage' => 18,
+                'print_document' => '',
+                'prefix_numbering' => 'BB1',
+                'start_numbering' => '1',
+                'branch_id' => $i+1,
+                'mail_shipping' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // ==============================================
+        // MÉTODOS DE PAGO
+        // ==============================================
+
+        for ($i=0; $i < 10; $i++) {
+            DB::table('payment_methods')->insert([
+                'name' => 'tarjeta',
+                'commission' => 5,
+                'type' => 'porcentaje',
+                'branch_id' => $i+1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        for ($i=0; $i < 10; $i++) {
+            DB::table('payment_methods')->insert([
+                'name' => 'yape',
+                'commission' => 0,
+                'type' => 'fijo',
+                'branch_id' => $i+1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // ==============================================
+        // PAGOS Y REQUERIMIENTOS
+        // ==============================================
+
+        for ($i=0; $i < 20; $i++) {
+            DB::table('payment_requirement')->insert([
+                'payment_methods_id' => $i+1,
+                'requirement_id' => $faker->numberBetween(1, 20),
+            ]);
+        }
+
+        // ==============================================
+        // DESCUENTOS
+        // ==============================================
+
+        for ($i=0; $i < 10; $i++) {
+            DB::table('discounts')->insert([
+                'name' => 'Dcto normal',
+                'status' => 'Activado',
+                'type' => 'porcentaje',
+                'markdown' => 10,
+                'branch_id' => $i+1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        for ($i=0; $i < 10; $i++) {
+            DB::table('discounts')->insert([
+                'name' => 'Dcto fijo',
+                'status' => 'Activado',
+                'type' => 'fijo',
+                'markdown' => 10,
+                'branch_id' => $i+1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // ==============================================
+        // VENTAS
+        // ==============================================
+
+        Sale::factory()->count(250)->create();
+
+        // ==============================================
+        // VENTAS Y PRODUCTOS
+        // ==============================================
+
+        for ($i=0; $i < 250; $i++) {
+            for ($a=0; $a < $faker->numberBetween(1, 5); $a++) {
+
+                $product_id = $faker->numberBetween(1, 100);
+
+                $exists = DB::table('sale_products')
+                              ->where('sale_id', $i+1)
+                              ->where('product_id', $product_id)
+                              ->exists();
+                if (!$exists) {
+                    DB::table('sale_products')->insert([
+                        'sale_id' => $i+1,
+                        'product_id' => $product_id,
+                        'quantity' => $faker->numberBetween(1, 10),
+                    ]);
+                }
+            }
+        }
+
+        // ==============================================
+        // VENTAS Y DESCUENTOS
+        // ==============================================
+
+        for ($i=0; $i < 250; $i++) {
+            DB::table('sale_discounts')->insert([
+                'sale_id' => $i+1,
+                'discount_id' => $faker->numberBetween(1, 20),
+                'total' => $faker->numberBetween(200, 300),
+            ]);
+        }
+
+        // ==============================================
+        // VENTAS Y MÉTODOS DE PAGO
+        // ==============================================
+
+        for ($i=0; $i < 250; $i++) {
+            DB::table('sale_payment_methods')->insert([
+                'sale_id' => $i+1,
+                'payment_method_id' => $faker->numberBetween(1, 20),
+                'total' => $faker->numberBetween(200, 300),
+            ]);
+        }
+
+        // ==============================================
+        // COMPRAS
+        // ==============================================
+
+        Purchase::factory()->count(250)->create();
+
+        // ==============================================
+        // COMPRAS Y PRODUCTOS
+        // ==============================================
+
+        for ($i=0; $i < 250; $i++) {
+            for ($a=0; $a < $faker->numberBetween(1, 5); $a++) {
+
+                $product_id = $faker->numberBetween(1, 100);
+
+                $exists = DB::table('purchase_products')
+                              ->where('purchase_id', $i+1)
+                              ->where('product_id', $product_id)
+                              ->exists();
+                if (!$exists) {
+                    DB::table('purchase_products')->insert([
+                        'purchase_id' => $i+1,
+                        'product_id' => $product_id,
+                        'quantity' => $faker->numberBetween(1, 10),
+                    ]);
+                }
+            }
+        }
+
+        // ==============================================
+        // COMPRAS Y MÉTODOS DE PAGO
+        // ==============================================
+
+        for ($i=0; $i < 250; $i++) {
+            DB::table('purchase_payment_methods')->insert([
+                'purchase_id' => $i+1,
+                'payment_method_id' => $faker->numberBetween(1, 20),
+                'total' => $faker->numberBetween(200, 300),
+            ]);
+        }
+
     }
 }
