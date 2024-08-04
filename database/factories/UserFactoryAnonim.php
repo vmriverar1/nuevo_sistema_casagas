@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
-class UserFactory extends Factory
+class UserFactoryAnonim extends Factory
 {
     /**
      * The current password being used by the factory.
@@ -25,15 +25,16 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => "Victor Rivera",
+            'id' => "0",
+            'name' => "Anónimo",
             'password' => Hash::make('password'), // Contraseña por defecto
-            'email' => "vmriverar1@gmail.com",
-            'document' => "48193275",
-            'phone' => "983755455",
+            'email' => "anonimo@gmail.com",
+            'document' => "00000000",
+            'phone' => "000000000",
             'address' => $this->faker->address,
             'birthday' => $this->faker->date,
             'photo' => 'default.jpg',
-            'profile' => 'usuario',
+            'profile' => 'cliente',
             'last_login' => $this->faker->dateTime,
             'data' => json_encode(['key' => $this->faker->word]),
             'email_verified_at' => $this->faker->optional()->dateTime,

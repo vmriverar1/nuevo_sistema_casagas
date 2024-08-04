@@ -57,6 +57,8 @@ class ClientController extends Controller
         $validatedData['password'] = Hash::make("password");
         $validatedData['profile'] = "cliente";
         $validatedData['email'] = $validatedData['document'] . '@temporal.com';
+        $validatedData['phone'] = $validatedData['phone'] ?? 'No disponible';
+        $validatedData['address'] = $validatedData['address'] ?? 'No disponible';
 
         $user = User::create($validatedData);
 
@@ -94,6 +96,8 @@ class ClientController extends Controller
         ]);
 
         $validatedData['photo'] = PhotoHelper::updatePhoto($client, 'client', $request);
+        $validatedData['phone'] = $validatedData['phone'] ?? 'No disponible';
+        $validatedData['address'] = $validatedData['address'] ?? 'No disponible';
 
         if (!empty($validatedData['password'])) {
             $validatedData['password'] = Hash::make($validatedData['password']);

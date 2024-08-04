@@ -13,6 +13,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PettyCashController;
@@ -45,6 +46,7 @@ Route::middleware(['auth', 'check.cun'])->group(function () {
     Route::apiResource('petty-cashes', PettyCashController::class);
     Route::apiResource('purchases', PurchaseController::class);
     Route::apiResource('requirements', RequirementController::class);
+    Route::apiResource('discounts', DiscountController::class);
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('sales', SaleController::class);
     Route::apiResource('users', UserController::class);
@@ -74,7 +76,7 @@ Route::middleware(['auth', 'check.cun'])->group(function () {
 
     Route::get('/usuarios', [UserController::class, 'page_user'])->name('usuarios');
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check-email');
-    Route::post('/change-product-status', [UserController::class, 'changeStatus'])->name('change-product-status');
+    Route::post('/change-user-status', [UserController::class, 'changeStatus'])->name('change-user-status');
 
     Route::get('/clientes', [ClientController::class, 'page_client'])->name('clientes');
     Route::get('/proveedores', [SupplierController::class, 'page_supplier'])->name('proveedores');
@@ -96,17 +98,45 @@ Route::middleware(['auth', 'check.cun'])->group(function () {
     })->name('requerimientos');
 
     // ========================================================
+    // DESCUENTO
+    // ========================================================
+
+    Route::get('/descuentos', function () {
+        return view('descuentos');
+    })->name('descuentos');
+
+
+    // ========================================================
+    // DOCUMENTOS
+    // ========================================================
+
+    Route::get('/documentos', function () {
+        return view('documentos');
+    })->name('documentos');
+
+
+    // ========================================================
     // CAJA
     // ========================================================
+
+    // -----CAJA CHICA
+    Route::post('/petty-cash-initial', [PettyCashController::class, 'store'])->name('petty-cash.store');
+    // -----CAJA
     Route::get('/caja', [CashController::class, 'page'])->name('caja');
-    Route::post('/hacer_venta ', [CashController::class, 'hacerVenta']);
+    Route::post('/hacer_venta', [CashController::class, 'hacerVenta']);
+    Route::post('/editar_venta/{venta}', [CashController::class, 'editarVenta']);
+    Route::post('/agregar_productos/{venta}', [CashController::class, 'productosVenta']);
     // -----VENTAS
     Route::get('/traer-venta/{venta_id}', [CashController::class, 'traerVenta']);
+    Route::get('/traer-ventas-activas', [CashController::class, 'traerVentasActivas']);
+    Route::get('/buscar-venta/{document}', [CashController::class, 'buscarVenta']);
     // -----PRODUCTOS
     Route::get('/buscar-productos', [CashController::class, 'buscarProductos']);
     Route::get('/buscar-servicios', [CashController::class, 'buscarServicios']);
     Route::get('/buscar-paquetes', [CashController::class, 'buscarPaquetes']);
     Route::get('/producto/{id}', [CashController::class, 'obtenerProducto']);
+    Route::get('/buscar-productos-select', [CashController::class, 'buscarProductosSelect']);
+    Route::get('/buscar-productos-todos', [CashController::class, 'buscarProductosTodos']);
     // -----COMPRAS
     Route::get('/buscar-compra/{document}', [CashController::class, 'buscarCompra']);
     Route::get('/traer-compra/{compra_id}', [CashController::class, 'traerCompra']);

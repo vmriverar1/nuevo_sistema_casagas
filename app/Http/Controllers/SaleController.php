@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Historial;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
@@ -73,11 +76,36 @@ class SaleController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Sale $sale)
+    * Remove the specified resource from storage.
+    */
+    public function destroy(Request $request, Sale $sale)
     {
-        $sale->update(['status' => 'eliminado']);
-        return response()->json(null, 204);
+        // Iniciar una transacción de base de datos
+        DB::beginTransaction();
+
+        try {
+            // Obtener los datos de la venta
+            $saleData = $sale->load(['customer', 'products', 'accountingDocument', 'advances', 'plate', 'discounts'])->toArray();
+
+            // Registrar en el historial
+            Historial::create([
+                'modulo' => 'ventas',
+                'responsable' => Auth::id(),
+                'data' => json_encode($saleData),
+                'razon' => $request->input('motivo_anulacion', 'Sin razón especificada'),
+            ]);
+
+            // Cambiar el estado de la venta a 'cancelled'
+            $sale->update(['status' => 'cancelled']);
+
+            // Confirmar la transacción
+            DB::commit();
+
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            // Revertir la transacción en caso de error
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

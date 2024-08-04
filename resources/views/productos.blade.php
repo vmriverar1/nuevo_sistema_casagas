@@ -76,6 +76,14 @@
                                     </select>
                                 </div>
 
+                                <div class="form-group">
+                                    <select class="form-control form-small mt-1" name="car_registration" required>
+                                        <option selected="selected" disabled>¿Requiere placa?</option>
+                                        <option value="activo">Sí, requiere placa</option>
+                                        <option value="inactivo">No, requiere placa</option>
+                                    </select>
+                                </div>
+
                                 <div class="form-group mb-4">
                                     <select class="form-control form-small mt-1 select_tipo_producto" name="type" required>
                                         <option selected="selected" disabled>Tipo de producto</option>
@@ -106,7 +114,7 @@
                                 <div class="form-group" style="display: flex; flex-direction: column;">
                                     <p class="mt-1">Selecciona los requerimientos</p>
                                     <div class="form-row">
-                                        <select class="form-control form-small select2_modal select_requerimiento" multiple="multiple" name="requirements" required>
+                                        <select class="form-control form-small select2_modal select_requerimiento" multiple="multiple" name="requirements">
                                             @foreach ($requerimientos as $requerimiento)
                                                 <option value="{{ $requerimiento->id }}">{{ $requerimiento->name }}</option>
                                             @endforeach

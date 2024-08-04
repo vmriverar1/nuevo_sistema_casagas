@@ -14,7 +14,8 @@ function actualizarListaUsuarios(data) {
     }
 
     if (data['action'] != 'no_tabla') {
-        initializeDataTable('html5-extension', 'products', columns, buttons, tabla_nombre);
+        console.log('Data:', data);
+        initializeDataTable('html5-extension', 'products', columns, buttons, actualizarListaUsuarios);
     }
 
     // ====================================================================
@@ -394,7 +395,7 @@ $(document).ready(function() {
             axios.delete('/categories/' + categoryId)
                 .then(function(response) {
                     // Paso 5: Eliminar la categoría de la lista
-                    initializeDataTable('html5-extension', 'products', columns, buttons, tabla_nombre);
+                    initializeDataTable('html5-extension', 'products', columns, buttons, actualizarListaUsuarios);
                     $('#modal-categoria').modal('hide');
                 })
                 .catch(function(error) {
@@ -420,7 +421,7 @@ $(document).ready(function() {
         axios.put('/categories/' + categoryId, { name: categoryName })
             .then(function(response) {
                 // Actualizar el nombre de la categoría en la lista
-                initializeDataTable('html5-extension', 'products', columns, buttons, tabla_nombre);
+                initializeDataTable('html5-extension', 'products', columns, buttons, actualizarListaUsuarios);
                 $('#modal-categoria').modal('hide');
             })
             .catch(function(error) {
@@ -470,7 +471,7 @@ $(document).ready(function() {
             axios.delete('/brands/' + brandId)
                 .then(function(response) {
                     // Paso 5: Eliminar la categoría de la lista
-                    initializeDataTable('html5-extension', 'products', columns, buttons, tabla_nombre);
+                    initializeDataTable('html5-extension', 'products', columns, buttons, actualizarListaUsuarios);
                     $('#modal-brand').modal('hide');
                 })
                 .catch(function(error) {
@@ -496,7 +497,7 @@ $(document).ready(function() {
         axios.put('/brands/' + brandId, { name: brandName })
             .then(function(response) {
                 // Actualizar el nombre de la categoría en la lista
-                initializeDataTable('html5-extension', 'products', columns, buttons, tabla_nombre);
+                initializeDataTable('html5-extension', 'products', columns, buttons, actualizarListaUsuarios);
                 $('#modal-brand').modal('hide');
             })
             .catch(function(error) {

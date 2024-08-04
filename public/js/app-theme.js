@@ -220,9 +220,9 @@ var App = function() {
                                 '<div class="pallet-icon">'+
                                     '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>'+
                                 '</div>'+
-                                '<div class="p-colors">'+
-                                    '<div id="default" class="color-scheme-default colorPallet-tooltip" data-original-title="Default"></div>'+
-                                    '<div id="minimal" class="color-scheme-minimal colorPallet-tooltip" data-original-title="Minimal"></div>'+
+                                '<div class="p-colors" style="display:flex; flex-direction:row;">'+
+                                    '<div id="default" class="color-scheme-default colorPallet-tooltip" style="background:#90ff90; padding: 5px 15px; color:black;">TOTAL EN CAJA: <b>S/.100.00</b></div>'+
+                                    '<div id="minimal" class="color-scheme-minimal colorPallet-tooltip" style="background:#2856df; padding: 5px; font-weight: bold; color: white;">REPORTE</div>'+
                                 '</div>'+
                             '</aside>';
 
@@ -613,9 +613,6 @@ async function initializeComponents($modal, modalId, route, callback = null, typ
                     },
                     "categories[]": {
                         select2Required: true
-                    },
-                    "requirements[]": {
-                        select2Required: true
                     }
                 },
                 messages: {
@@ -636,9 +633,6 @@ async function initializeComponents($modal, modalId, route, callback = null, typ
                     },
                     "categories[]": {
                         select2Required: "Por favor, selecciona al menos una categoría"
-                    },
-                    "requirements[]": {
-                        select2Required: "Por favor, selecciona al menos un requerimiento"
                     }
                 },
                 errorPlacement: function (error, element) {
@@ -711,14 +705,15 @@ async function initializeComponents($modal, modalId, route, callback = null, typ
 
         // iniciar botones de Touchspin
         $modal.find(".input_cantidad").TouchSpin({
-            initval: 0
+            initval: 0,
+            max: 1000000000000000000,
         });
 
         // input precio
         $modal.find(".input_precio").TouchSpin({
             prefix: 'S/.',
             min: 0,
-            max: 100,
+            max: 1000000000000000000,
             step: 0.1,
             decimals: 2,
             boostat: 5,
@@ -793,10 +788,7 @@ function submitForm(modalId, route, callback = null) {
         }
     });
 
-    // ===========================================
     // CASOS ESPECIALES
-    // ===========================================
-
     if (route === '/hacer_venta' && typeof caja !== 'undefined') {
         formData.append('caja', JSON.stringify(caja));
     }
@@ -820,11 +812,19 @@ function submitForm(modalId, route, callback = null) {
     })
     .catch(error => {
         console.error(error);
-        // Manejar los errores aquí, por ejemplo, mostrar mensajes de error en el modal
-        alert('Ha ocurrido un error. Por favor, inténtelo de nuevo.');
+        if (error.response && error.response.data.errors) {
+            let errorMessage = 'Errores de validación:\n';
+            for (const [field, messages] of Object.entries(error.response.data.errors)) {
+                errorMessage += `${field}: ${messages.join(', ')}\n`;
+            }
+            alert(errorMessage);
+        } else if (error.response && error.response.data.error) {
+            alert(`Error: ${error.response.data.error}`);
+        } else {
+            alert('Ha ocurrido un error. Por favor, inténtelo de nuevo.');
+        }
     });
 }
-
 // // Ejemplo de uso:
 // submitForm('modal-usuarios', '/api/users', (data) => {
 //     console.log('Usuario creado:', data);
@@ -868,7 +868,38 @@ function fetchDataToModal(modalId, route, callback=null) {
 
                     // Si es un select2, necesitamos trigger 'change' para que se actualice visualmente
                     if (input.hasClass('select2')) {
-                        input.trigger('change');
+                        console.log('Select2:', input);
+                        console.log('Valor:', data[name]);
+                        // en caso de que no exista agregar el valor agrregarlo al select2
+                        if (input.find(`option[value="${data[name]}"]`).length === 0) {
+                            const newOption = new Option(data[name], data[id], true, true);
+                            input.append(newOption).trigger('change');
+                        } else {
+                            input.val(data[name]).trigger('change');
+                        }
+                    }
+
+                    if (input.hasClass('select2_modal')) {
+                        input.val(data[name]).trigger('change');
+                        // en caso de que no exista agregar el valor agrregarlo al select2
+                        if (input.find(`option[value="${data[name]}"]`).length === 0) {
+
+                            if(name == "name"){
+                                input.find(`option[value="${data["id"]}"]`).remove();
+                                const newOption = new Option(data["name"], data["id"], true, true);
+                                input.append(newOption).trigger('change');
+                            }else{
+                                const newOption = new Option(data[name], data[name], true, true);
+                                input.append(newOption).trigger('change');
+                            }
+                        }
+
+                        if(name == "name"){
+                            input.val(data["id"]).trigger('change');
+                        }else{
+                            input.val(data[name]).trigger('change');
+                        }
+
                     }
                 }
             });
@@ -884,21 +915,16 @@ function fetchDataToModal(modalId, route, callback=null) {
 
             $('#'+modalId).modal('show');
             data['action'] = 'no_tabla';
-            callback(data);
+
+            if (callback) {
+                callback(data);
+            }
         })
         .catch(error => {
             console.error(error);
             alert('Ha ocurrido un error al recuperar los datos. Por favor, inténtelo de nuevo.');
         });
 }
-
-// Ejemplo de uso:
-// fetchDataToModal('modal-usuarios', '/api/users/1');
-
-// $('#edit-user-button').on('click', function() {
-//     fetchDataToModal('modal-usuarios', '/api/users/1');
-//     $('#modal-usuarios').modal('show');
-// });
 
 // ===========================================
 // UPTDATE DATA
@@ -1084,5 +1110,11 @@ function initializeDataTable(tableId, apiRoute, columns, buttons, callback = nul
             console.error('Error fetching data:', error);
         });
 }
+
+
+$(document).on('click', '.close', function() {
+    $('.modal-dom').modal('hide');
+    $('.modal').modal('hide');
+});
 
 

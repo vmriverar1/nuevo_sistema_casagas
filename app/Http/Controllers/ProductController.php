@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\Branch;
 use App\Models\Product;
+use App\Models\Category;
+use App\Models\Requirement;
 use Illuminate\Support\Str;
 use App\Helpers\PhotoHelper;
 use App\Helpers\TableHelper;
 use Illuminate\Http\Request;
 use App\Helpers\BranchHelper;
 use App\Helpers\ProductHelper;
-use App\Models\Branch;
-use App\Models\Category;
-use App\Models\Requirement;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -51,7 +52,7 @@ class ProductController extends Controller
         $product = Product::find($productId);
 
         if ($product) {
-            if ($status == 'activo') {
+            if ($status == 'Activo') {
                 $newStatus = 'inactivo';
             } else {
                 $newStatus = 'activo';
@@ -171,42 +172,126 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'nullable|string|max:255',
-            'brand_id' => 'required|exists:brands,id',
-            'categories' => 'required|array',
-            'categories.*' => 'exists:categories,id',
-            'requirements' => 'required|array',
-            'requirements.*' => 'exists:requirements,id',
-            'stock' => 'required|numeric',
-            'minimum' => 'nullable|integer',
-            'purchase_price' => 'nullable|numeric',
-            'sale_price' => 'nullable|numeric',
-            'barcode' => 'nullable|string|max:255',
-            'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
-        ]);
+        // Definir los mensajes de error personalizados
+        $messages = [
+            'name.required' => 'El nombre del producto es obligatorio.',
+            'name.string' => 'El nombre del producto debe ser una cadena de texto.',
+            'name.max' => 'El nombre del producto no debe ser mayor que 255 caracteres.',
+            'type.string' => 'El tipo de producto debe ser una cadena de texto.',
+            'type.max' => 'El tipo de producto no debe ser mayor que 255 caracteres.',
+            'brand_id.required' => 'La marca del producto es obligatoria.',
+            'categories.required' => 'Las categorías del producto son obligatorias.',
+            'categories.array' => 'Las categorías del producto deben ser un arreglo.',
+            'requirements.array' => 'Los requisitos del producto deben ser un arreglo.',
+            'stock.required' => 'El stock del producto es obligatorio.',
+            'stock.numeric' => 'El stock del producto debe ser un número.',
+            'minimum.integer' => 'El mínimo del producto debe ser un número entero.',
+            'purchase_price.numeric' => 'El precio de compra del producto debe ser un número.',
+            'sale_price.numeric' => 'El precio de venta del producto debe ser un número.',
+            'barcode.string' => 'El código de barras del producto debe ser una cadena de texto.',
+            'barcode.max' => 'El código de barras del producto no debe ser mayor que 255 caracteres.',
+            'photo.image' => 'La foto debe ser una imagen.',
+            'photo.mimes' => 'La foto debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+            'photo.max' => 'La foto no debe ser mayor que 2048 kilobytes.',
+        ];
+
+        // Asegurarse de que el atributo requirements sea un array
+        if (!$request->filled('requirements')) {
+            $request->merge(['requirements' => []]);
+        }
+
+        // Convertir nombres de marca y categorías a IDs antes de la validación
+        try {
+            // Verificar si brand_id es un ID o un nombre
+            if (!is_numeric($request->brand_id)) {
+                $brand = Brand::where('name', $request->brand_id)->firstOrFail();
+                $request->merge(['brand_id' => $brand->id]);
+            }
+
+            // Verificar si cada categoría es un ID o un nombre
+            $categoryIds = [];
+            foreach ($request->categories as $category) {
+                if (!is_numeric($category)) {
+                    $categoryId = Category::where('name', $category)->pluck('id')->first();
+                    if ($categoryId) {
+                        $categoryIds[] = $categoryId;
+                    } else {
+                        throw new \Exception("Categoría no encontrada: $category");
+                    }
+                } else {
+                    $categoryIds[] = $category;
+                }
+            }
+
+            // Actualizar el request con los IDs correctos
+            $request->merge(['categories' => $categoryIds]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al procesar los nombres de marca o categorías.'], 400);
+        }
+
+        // Validar la solicitud
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'type' => 'nullable|string|max:255',
+                'brand_id' => 'required|exists:brands,id',
+                'categories' => 'required|array',
+                'categories.*' => 'exists:categories,id',
+                'requirements' => 'array',
+                'stock' => 'required|numeric',
+                'minimum' => 'nullable|integer',
+                'purchase_price' => 'nullable|numeric',
+                'sale_price' => 'nullable|numeric',
+                'barcode' => 'nullable|string|max:255',
+                'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
+            ], $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
 
         $branch = BranchHelper::getBranchIdFromSession();
-        $validatedData['branch_id'] = $branch->id;
-        $validatedData['photo'] = PhotoHelper::submitPhoto('product', $request);
-        if ($validatedData['barcode'] == null) {
-            $validatedData['barcode'] =  "";
+
+        DB::beginTransaction();
+        try {
+            $validatedData['branch_id'] = $branch->id;
+            $validatedData['photo'] = PhotoHelper::submitPhoto('product', $request);
+            if ($validatedData['barcode'] == null) {
+                $validatedData['barcode'] = "";
+            }
+
+            $product = Product::create($validatedData);
+
+            // Guardar las categorías del producto en la tabla intermedia
+            foreach ($validatedData['categories'] as $categoryId) {
+                $product->categories()->attach($categoryId);
+            }
+
+            // Guardar los requerimientos del producto en la tabla intermedia
+            if (count($validatedData["requirements"]) > 0) {
+                Log::info('Requerimientos:'. print_r($validatedData["requirements"],true));
+                foreach ($request->requirements as $requirementId) {
+                    $product->requirements()->attach($requirementId);
+                }
+            }
+
+            DB::commit();
+            return response()->json($product, 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            if ($e->errorInfo[1] == 1062) {
+                return response()->json(['error' => 'El código de barras ya existe en la base de datos.'], 409);
+            } elseif ($e->errorInfo[1] == 1048) {
+                return response()->json(['error' => 'Un campo requerido contiene un valor nulo.'], 400);
+            }
+            Log::error('Error al guardar el producto: -282- ' . $e->getMessage());
+            return response()->json(['error' => 'Error al guardar el producto.'], 500);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al guardar el producto: -286- ' . $e->getMessage());
+            return response()->json(['error' => 'Error al guardar el producto.'], 500);
         }
-
-        $product = Product::create($validatedData);
-
-        // Guardar las categorías del producto en la tabla intermedia
-        foreach ($request->categories as $categoryId) {
-            $product->categories()->attach($categoryId);
-        }
-
-        // Guardar los requerimientos del producto en la tabla intermedia
-        foreach ($request->requirements as $requirementId) {
-            $product->requirements()->attach($requirementId);
-        }
-
-        return response()->json($product, 201);
     }
 
     /**
@@ -225,97 +310,189 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'nullable|string|max:255',
-            'brand_id' => 'required|exists:brands,id',
-            'categories' => 'required|array',
-            'categories.*' => 'exists:categories,id',
-            'requirements' => 'required|array',
-            'requirements.*' => 'exists:requirements,id',
-            'stock' => 'required|numeric',
-            'minimum' => 'nullable|integer',
-            'purchase_price' => 'nullable|numeric',
-            'sale_price' => 'nullable|numeric',
-            'barcode' => 'nullable|string|max:255',
-            'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
-        ]);
+        // Definir los mensajes de error personalizados
+        $messages = [
+            'name.required' => 'El nombre del producto es obligatorio.',
+            'name.string' => 'El nombre del producto debe ser una cadena de texto.',
+            'name.max' => 'El nombre del producto no debe ser mayor que 255 caracteres.',
+            'type.string' => 'El tipo de producto debe ser una cadena de texto.',
+            'type.max' => 'El tipo de producto no debe ser mayor que 255 caracteres.',
+            'brand_id.required' => 'La marca del producto es obligatoria.',
+            'categories.required' => 'Las categorías del producto son obligatorias.',
+            'categories.array' => 'Las categorías del producto deben ser un arreglo.',
+            'requirements.array' => 'Los requisitos del producto deben ser un arreglo.',
+            'stock.required' => 'El stock del producto es obligatorio.',
+            'stock.numeric' => 'El stock del producto debe ser un número.',
+            'minimum.integer' => 'El mínimo del producto debe ser un número entero.',
+            'purchase_price.numeric' => 'El precio de compra del producto debe ser un número.',
+            'sale_price.numeric' => 'El precio de venta del producto debe ser un número.',
+            'barcode.string' => 'El código de barras del producto debe ser una cadena de texto.',
+            'barcode.max' => 'El código de barras del producto no debe ser mayor que 255 caracteres.',
+            'photo.image' => 'La foto debe ser una imagen.',
+            'photo.mimes' => 'La foto debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+            'photo.max' => 'La foto no debe ser mayor que 2048 kilobytes.',
+        ];
 
-        $branch = BranchHelper::getBranchIdFromSession();
-        $validatedData['photo'] = PhotoHelper::updatePhoto($product, 'product', $request);
-
-        if ($validatedData['barcode'] == null) {
-            $validatedData['barcode'] =  "";
+        // Asegurarse de que el atributo requirements sea un array
+        if (!$request->filled('requirements')) {
+            $request->merge(['requirements' => []]);
         }
 
-        $product->update($validatedData);
-
-        // ===============================================
-        // CATEGORIAS
-        // ===============================================
-
-        $existingCategoryIds = $product->categories->pluck('id')->toArray();
-        $newCategoryIds = $request->categories;
-
-        $categoriesToAdd = array_diff($newCategoryIds, $existingCategoryIds);
-        $categoriesToRemove = array_diff($existingCategoryIds, $newCategoryIds);
-
-        $product->categories()->detach($categoriesToRemove);
-        $product->categories()->attach($categoriesToAdd);
-
-        // ===============================================
-        // REQUERIMIENTOS
-        // ===============================================
-
-        $existingRequirementIds = $product->requirements->pluck('id')->toArray();
-        $newRequirementIds = $request->requirements;
-
-        $requirementsToAdd = array_diff($newRequirementIds, $existingRequirementIds);
-        $requirementsToRemove = array_diff($existingRequirementIds, $newRequirementIds);
-
-        $product->requirements()->detach($requirementsToRemove);
-        $product->requirements()->attach($requirementsToAdd);
-
-        // ===============================================
-        // PAQUETE
-        // ===============================================
-
-        if($request->type === "paquete"){
-            $productosKit = json_decode($request->productos_kit, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                // Obtener los IDs y cantidades actuales de productos en el paquete
-                $existingProductsInPackage = $product->productsInPackage->keyBy('id')->toArray();
-
-                $productsToAddOrUpdate = [];
-                $productsToRemove = array_keys($existingProductsInPackage);
-
-                foreach ($productosKit as $producto) {
-                    if (isset($existingProductsInPackage[$producto['id']])) {
-                        // Si el producto ya existe, verificar si hay cambios en la cantidad
-                        if ($existingProductsInPackage[$producto['id']]['pivot']['quantity'] != $producto['quantity']) {
-                            $productsToAddOrUpdate[$producto['id']] = ['quantity' => $producto['quantity']];
-                        }
-                        // Remover el producto de la lista de productos a eliminar
-                        unset($productsToRemove[array_search($producto['id'], $productsToRemove)]);
-                    } else {
-                        // Si el producto no existe, agregarlo
-                        $productsToAddOrUpdate[$producto['id']] = ['quantity' => $producto['quantity']];
-                    }
-                }
-
-                // Agregar o actualizar productos en el paquete
-                if (!empty($productsToAddOrUpdate)) {
-                    $product->productsInPackage()->syncWithoutDetaching($productsToAddOrUpdate);
-                }
-
-                // Eliminar productos que ya no están en el paquete
-                if (!empty($productsToRemove)) {
-                    $product->productsInPackage()->detach($productsToRemove);
+        // Convertir nombres de marca y categorías a IDs antes de la validación
+        try {
+            // Verificar si name es un ID y convertirlo a nombre
+            if (is_numeric($request->name)) {
+                $productName = Product::where('id', $request->name)->pluck('name')->first();
+                if ($productName) {
+                    $request->merge(['name' => $productName]);
+                } else {
+                    throw new \Exception("Producto no encontrado con el ID: $request->name");
                 }
             }
+
+            // Verificar si brand_id es un ID o un nombre
+            if (!is_numeric($request->brand_id)) {
+                $brand = Brand::where('name', $request->brand_id)->firstOrFail();
+                $request->merge(['brand_id' => $brand->id]);
+            }
+
+            // Verificar si cada categoría es un ID o un nombre
+            $categoryIds = [];
+            foreach ($request->categories as $category) {
+                if (!is_numeric($category)) {
+                    $categoryId = Category::where('name', $category)->pluck('id')->first();
+                    if ($categoryId) {
+                        $categoryIds[] = $categoryId;
+                    } else {
+                        throw new \Exception("Categoría no encontrada: $category");
+                    }
+                } else {
+                    $categoryIds[] = $category;
+                }
+            }
+
+            // Actualizar el request con los IDs correctos
+            $request->merge(['categories' => $categoryIds]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al procesar los nombres de marca o categorías.'], 400);
         }
 
-        return response()->json($product);
+        // Validar la solicitud
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'type' => 'nullable|string|max:255',
+                'brand_id' => 'required|exists:brands,id',
+                'categories' => 'required|array',
+                'categories.*' => 'exists:categories,id',
+                'requirements' => 'array',
+                'stock' => 'required|numeric',
+                'minimum' => 'nullable|integer',
+                'purchase_price' => 'nullable|numeric',
+                'sale_price' => 'nullable|numeric',
+                'barcode' => 'nullable|string|max:255',
+                'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
+            ], $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        $branch = BranchHelper::getBranchIdFromSession();
+
+        DB::beginTransaction();
+        try {
+            $validatedData['branch_id'] = $branch->id;
+            $validatedData['photo'] = PhotoHelper::updatePhoto($product, 'product', $request);
+
+            if ($validatedData['barcode'] == null) {
+                $validatedData['barcode'] = "";
+            }
+
+            $product->update($validatedData);
+
+            // ===============================================
+            // CATEGORIAS
+            // ===============================================
+
+            $existingCategoryIds = $product->categories->pluck('id')->toArray();
+            $newCategoryIds = $request->categories;
+
+            $categoriesToAdd = array_diff($newCategoryIds, $existingCategoryIds);
+            $categoriesToRemove = array_diff($existingCategoryIds, $newCategoryIds);
+
+            $product->categories()->detach($categoriesToRemove);
+            $product->categories()->attach($categoriesToAdd);
+
+            // ===============================================
+            // REQUERIMIENTOS
+            // ===============================================
+
+            $existingRequirementIds = $product->requirements->pluck('id')->toArray();
+            $newRequirementIds = $request->requirements;
+
+            $requirementsToAdd = array_diff($newRequirementIds, $existingRequirementIds);
+            $requirementsToRemove = array_diff($existingRequirementIds, $newRequirementIds);
+
+            $product->requirements()->detach($requirementsToRemove);
+            $product->requirements()->attach($requirementsToAdd);
+
+            // ===============================================
+            // PAQUETE
+            // ===============================================
+
+            if ($request->type === "paquete") {
+                $productosKit = json_decode($request->productos_kit, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Obtener los IDs y cantidades actuales de productos en el paquete
+                    $existingProductsInPackage = $product->productsInPackage->keyBy('id')->toArray();
+
+                    $productsToAddOrUpdate = [];
+                    $productsToRemove = array_keys($existingProductsInPackage);
+
+                    foreach ($productosKit as $producto) {
+                        if (isset($existingProductsInPackage[$producto['id']])) {
+                            // Si el producto ya existe, verificar si hay cambios en la cantidad
+                            if ($existingProductsInPackage[$producto['id']]['pivot']['quantity'] != $producto['quantity']) {
+                                $productsToAddOrUpdate[$producto['id']] = ['quantity' => $producto['quantity']];
+                            }
+                            // Remover el producto de la lista de productos a eliminar
+                            unset($productsToRemove[array_search($producto['id'], $productsToRemove)]);
+                        } else {
+                            // Si el producto no existe, agregarlo
+                            $productsToAddOrUpdate[$producto['id']] = ['quantity' => $producto['quantity']];
+                        }
+                    }
+
+                    // Agregar o actualizar productos en el paquete
+                    if (!empty($productsToAddOrUpdate)) {
+                        $product->productsInPackage()->syncWithoutDetaching($productsToAddOrUpdate);
+                    }
+
+                    // Eliminar productos que ya no están en el paquete
+                    if (!empty($productsToRemove)) {
+                        $product->productsInPackage()->detach($productsToRemove);
+                    }
+                }
+            }
+
+            DB::commit();
+            return response()->json($product);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            if ($e->errorInfo[1] == 1062) {
+                return response()->json(['error' => 'El código de barras ya existe en la base de datos.'], 409);
+            } elseif ($e->errorInfo[1] == 1048) {
+                return response()->json(['error' => 'Un campo requerido contiene un valor nulo.'], 400);
+            }
+            Log::error('Error al actualizar el producto: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al actualizar el producto.'], 500);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar el producto: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al actualizar el producto.'], 500);
+        }
     }
 
     /**

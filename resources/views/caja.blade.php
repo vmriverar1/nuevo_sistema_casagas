@@ -8,15 +8,27 @@
     const document_data_complete = @json($documentos);
 </script>
 
+<style>
+    .caja-panel{
+        width: 450px;
+        padding: 20px 30px;
+    }
+    .card{
+        max-height: 400px;
+    }
+    .card-img-top {
+        height: 57% !important;
+    }
+
+    .layout-px-spacing>div, .layout-px-spacing .doc-container{
+        height: 100% !important;
+    }
+
+</style>
+
 <!--  BEGIN CONTENT AREA  -->
 
 <div class="layout-px-spacing">
-
-    <div class="page-header">
-        <div class="page-title">
-            <h3>Caja</h3>
-        </div>
-    </div>
 
     <div class="row invoice layout-top-spacing">
         <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
@@ -36,15 +48,15 @@
 
                             <div class="input-group caja-panel-input">
                                 <input type="text" class="form-control search_input search_sale" placeholder="Buscar" aria-label="dropdown">
+                                <datalist id="suggestions"></datalist>
                                 <div class="input-group-append">
                                     <button class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> </button>
                                     <div class="dropdown-menu" style="will-change: transform;">
                                         <a class="dropdown-item ver_ventas" href="javascript:void(0);">Ventas</a>
                                         <a class="dropdown-item ver_compras" href="javascript:void(0);">Compras</a>
-                                        <a class="dropdown-item ver_clientes" href="javascript:void(0);">Clientes</a>
                                         <div role="separator" class="dropdown-divider"></div>
                                         <a class="dropdown-item nueva_venta" href="javascript:void(0);">Nueva Venta</a>
-                                        <a class="dropdown-item nueva_venta" href="javascript:void(0);">Nueva Compra</a>
+                                        <a class="dropdown-item nueva_compra" href="javascript:void(0);">Nueva Compra</a>
                                     </div>
                                 </div>
                             </div>
@@ -59,9 +71,11 @@
                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                                                         class="feather feather-dollar-sign" style="background:
                                                         @if ($venta->status == "in_process")
-                                                            #90acff
-                                                        @else
+                                                            #ffa190
+                                                        @elseif ($venta->status == "charged")
                                                             #90ff90
+                                                        @else
+                                                            #fbff90
                                                         @endif
                                                         ">
                                                         <line x1="12" y1="1" x2="12" y2="23"></line>
@@ -71,7 +85,7 @@
                                                 </div>
                                                 <div class="f-body">
                                                     <p class="invoice-number">Venta {{ $venta->accounting_document_code }}</p>
-                                                    <p class="invoice-customer-name"><span>Cliente:</span> {{ $venta->customer->name }}</p>
+                                                    <p class="invoice-customer-name"><span>Cliente:</span> {{ $venta->customer->name ?? 'ANONIMO' }}</p>
                                                     <p class="invoice-generated-date">{{ $venta->created_at }}</p>
                                                 </div>
                                             </div>
@@ -131,13 +145,13 @@
                             {{-- <p>Open an invoice from the list.</p> --}}
                             <div class="lista-productos" style="display: none !important">
                                 <ul class="nav nav-tabs  mb-3 mt-3" id="simpletab" role="tablist">
-                                    <li class="nav-item">
+                                    <li class="nav-item btn-lista-productos">
                                         <a class="nav-link active" id="productos-tab" data-toggle="tab" href="#productos" role="tab" aria-controls="productos" aria-selected="true"><b>Productos</b></a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item btn-lista-servicios">
                                         <a class="nav-link" id="servicios-tab" data-toggle="tab" href="#servicios" role="tab" aria-controls="servicios" aria-selected="false"><b>Servicios</b></a>
                                     </li>
-                                    <li class="nav-item">
+                                    <li class="nav-item btn-lista-kits">
                                         <a class="nav-link" id="kits-tab" data-toggle="tab" href="#kits" role="tab" aria-controls="kits" aria-selected="false"><b>Kits</b></a>
                                     </li>
                                 </ul>
@@ -202,159 +216,6 @@
                         </div>
 
 
-
-                        {{-- <div id="background-facturas-body" id="ct" class="">
-
-                            <div class="invoice-00001">
-                                <div class="content-section  animated animatedFadeInUp fadeInUp">
-
-                                    <div class="row inv--head-section">
-
-                                        <div class="col-sm-6 col-12">
-                                            <h3 class="in-heading">INVOICE</h3>
-                                        </div>
-                                        <div class="col-sm-6 col-12 align-self-center text-sm-right">
-                                            <div class="company-info">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="feather feather-hexagon">
-                                                    <path
-                                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
-                                                    </path>
-                                                </svg>
-                                                <h5 class="inv-brand-name">CORK</h5>
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <div class="row inv--detail-section">
-
-                                        <div class="col-sm-7 align-self-center">
-                                            <p class="inv-to">Invoice To</p>
-                                        </div>
-                                        <div class="col-sm-5 align-self-center  text-sm-right order-sm-0 order-1">
-                                            <p class="inv-detail-title">From : XYZ Company</p>
-                                        </div>
-
-                                        <div class="col-sm-7 align-self-center">
-                                            <p class="inv-customer-name">Jesse Cory</p>
-                                            <p class="inv-street-addr">405 Mulberry Rd. Mc Grady, NC, 28649</p>
-                                            <p class="inv-email-address">redq@company.com</p>
-                                        </div>
-                                        <div class="col-sm-5 align-self-center  text-sm-right order-2">
-                                            <p class="inv-list-number"><span class="inv-title">Invoice Number :
-                                                </span> <span class="inv-number">[invoice number]</span></p>
-                                            <p class="inv-created-date"><span class="inv-title">Invoice Date :
-                                                </span> <span class="inv-date">20 Aug 2019</span></p>
-                                            <p class="inv-due-date"><span class="inv-title">Due Date : </span>
-                                                <span class="inv-date">26 Aug 2019</span>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="row inv--product-table-section">
-                                        <div class="col-12">
-                                            <div class="table-responsive">
-                                                <table class="table">
-                                                    <thead class="">
-                                                        <tr>
-                                                            <th scope="col">S.No</th>
-                                                            <th scope="col">Items</th>
-                                                            <th class="text-right" scope="col">Qty</th>
-                                                            <th class="text-right" scope="col">Unit Price</th>
-                                                            <th class="text-right" scope="col">Amount</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td>1</td>
-                                                            <td>Electric Shaver</td>
-                                                            <td class="text-right">20</td>
-                                                            <td class="text-right">$300</td>
-                                                            <td class="text-right">$2800</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>2</td>
-                                                            <td>Earphones</td>
-                                                            <td class="text-right">49</td>
-                                                            <td class="text-right">$500</td>
-                                                            <td class="text-right">$7000</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>3</td>
-                                                            <td>Wireless Router</td>
-                                                            <td class="text-right">30</td>
-                                                            <td class="text-right">$500</td>
-                                                            <td class="text-right">$3500</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row mt-4">
-                                        <div class="col-sm-5 col-12 order-sm-0 order-1">
-                                            <div class="inv--payment-info">
-                                                <div class="row">
-                                                    <div class="col-sm-12 col-12">
-                                                        <h6 class=" inv-title">Payment Info:</h6>
-                                                    </div>
-                                                    <div class="col-sm-4 col-12">
-                                                        <p class=" inv-subtitle">Bank Name: </p>
-                                                    </div>
-                                                    <div class="col-sm-8 col-12">
-                                                        <p class="">Bank of America</p>
-                                                    </div>
-                                                    <div class="col-sm-4 col-12">
-                                                        <p class=" inv-subtitle">Account Number : </p>
-                                                    </div>
-                                                    <div class="col-sm-8 col-12">
-                                                        <p class="">1234567890</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-sm-7 col-12 order-sm-1 order-0">
-                                            <div class="inv--total-amounts text-sm-right">
-                                                <div class="row">
-                                                    <div class="col-sm-8 col-7">
-                                                        <p class="">Sub Total: </p>
-                                                    </div>
-                                                    <div class="col-sm-4 col-5">
-                                                        <p class="">$13300</p>
-                                                    </div>
-                                                    <div class="col-sm-8 col-7">
-                                                        <p class="">Tax Amount: </p>
-                                                    </div>
-                                                    <div class="col-sm-4 col-5">
-                                                        <p class="">$700</p>
-                                                    </div>
-                                                    <div class="col-sm-8 col-7">
-                                                        <p class=" discount-rate">Discount : <span
-                                                                class="discount-percentage">5%</span> </p>
-                                                    </div>
-                                                    <div class="col-sm-4 col-5">
-                                                        <p class="">$700</p>
-                                                    </div>
-                                                    <div class="col-sm-8 col-7 grand-total-title">
-                                                        <h4 class="">Grand Total : </h4>
-                                                    </div>
-                                                    <div class="col-sm-4 col-5 grand-total-amount">
-                                                        <h4 class="">$14000</h4>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-
-                        </div> --}}
-
                     </div>
 
 
@@ -367,8 +228,9 @@
     </div>
 </div>
 
-<div class="modal fade" id="modal-cerrar-venta" class="modal-dom" tabindex="-1" role="dialog"
-    aria-labelledby="modal-productos-title" aria-hidden="true">
+<!-- Modal venta -->
+
+<div class="modal fade" id="modal-cerrar-venta" class="modal-dom" tabindex="-1" role="dialog" aria-labelledby="modal-productos-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -409,15 +271,16 @@
                             <div id="div_car_registration">
                             </div>
 
-
-                            <div class="mt-4 mb-4">
-                                <select class="form-control" name="discount_sale_select" id="discount_sale_select" required>
-                                    <option value="ninguno" selected>Ningun descuento</option>
-                                    @foreach ( $descuentos as $descuento )
-                                        <option value="{{ $descuento->id }}">{{ $descuento->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @if ( $descuentos->count() > 0 )
+                                <div class="mt-4 mb-4">
+                                    <select class="form-control" name="discount_sale_select" id="discount_sale_select" required>
+                                        <option value="ninguno" selected>Ningun descuento</option>
+                                        @foreach ( $descuentos as $descuento )
+                                            <option value="{{ $descuento->id }}">{{ $descuento->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
                             <div id="dom_discount_type" style="display: none;">
                                 <p class="mt-1">Descuento</p>
@@ -426,23 +289,27 @@
                                 </div>
                             </div>
 
-                            <div class="mt-4 mb-4">
-                                <select class="form-control" id="document_sale" name="document_sale" required>
-                                    <option disabled selected>Seleccionar documento de pago</option>
-                                    @foreach ( $documentos as $documento )
-                                        <option value="{{ $documento->id }}">{{ $documento->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @if ( $documentos->count() > 0 )
+                                <div class="mt-4 mb-4">
+                                    <select class="form-control" id="document_sale" name="document_sale" required>
+                                        <option disabled selected>Seleccionar documento de pago</option>
+                                        @foreach ( $documentos as $documento )
+                                            <option value="{{ $documento->id }}">{{ $documento->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
-                            <div class="mt-4 mb-4">
-                                <select class="form-control" name="payment_sale" id="payment_sale">
-                                    <option value="ninguno">Pago en efectivo</option>
-                                    @foreach ( $pagos as $pago )
-                                        <option value="{{ $pago->id }}">{{ $pago->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @if ( $pagos->count() > 0 )
+                                <div class="mt-4 mb-4">
+                                    <select class="form-control" name="payment_sale" id="payment_sale">
+                                        <option value="ninguno">Pago en efectivo</option>
+                                        @foreach ( $pagos as $pago )
+                                            <option value="{{ $pago->id }}">{{ $pago->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
 
                             <div id="div_payment_type">
                             </div>
@@ -473,7 +340,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="item-timeline timeline-new" id="product_list_modal">
+                                        <div class="item-timeline timeline-new product_list_modal" id="product_list_modal">
                                             <div class="t-dot">
                                                 <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-archive"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></div>
                                             </div>
@@ -513,45 +380,50 @@
                                             </div>
                                         </div>
 
-                                        <div class="item-timeline timeline-new">
-                                            <div class="t-dot">
-                                                <div class="t-danger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-                                            </div>
-                                            <div class="t-content">
-                                                <div class="t-uppercontent">
-                                                    <h5 class="descuento_titulo_modal">Descuento</h5>
-                                                    {{-- <span class="">Monto fijo</span> --}}
+                                        @if ( $descuentos->count() > 0 )
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-danger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                                                 </div>
-                                                <p class="descuento_modal">S/.0</p>
-                                            </div>
-                                        </div>
-
-                                        <div class="item-timeline timeline-new">
-                                            <div class="t-dot">
-                                                <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
-                                            </div>
-                                            <div class="t-content">
-                                                <div class="t-uppercontent">
-                                                    <h5>Documentos</h5>
-                                                    <span class="documento_tipo_modal">BOLETA</span>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5 class="descuento_titulo_modal">Descuento</h5>
+                                                        {{-- <span class="">Monto fijo</span> --}}
+                                                    </div>
+                                                    <p class="descuento_modal">S/.0</p>
                                                 </div>
-                                                <p class="documento_modal">S/.0.00</p>
                                             </div>
-                                        </div>
+                                        @endif
 
-
-                                        <div class="item-timeline timeline-new">
-                                            <div class="t-dot">
-                                                <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
-                                            </div>
-                                            <div class="t-content">
-                                                <div class="t-uppercontent">
-                                                    <h5>Forma de pago</h5>
-                                                    <span class="forma_pago_tipo_modal">Efectivo</span>
+                                        @if ( $documentos->count() > 0 )
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
                                                 </div>
-                                                <p class="forma_pago_modal">Efectivo S/.0.00</p>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Documentos</h5>
+                                                        <span class="documento_tipo_modal">BOLETA</span>
+                                                    </div>
+                                                    <p class="documento_modal">S/.0.00</p>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endif
+
+                                        @if ( $pagos->count() > 0 )
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Forma de pago</h5>
+                                                        <span class="forma_pago_tipo_modal">Efectivo</span>
+                                                    </div>
+                                                    <p class="forma_pago_modal">Efectivo S/.0.00</p>
+                                                </div>
+                                            </div>
+                                        @endif
 
                                         <div class="item-timeline timeline-new">
                                             <div class="t-dot">
@@ -606,6 +478,728 @@
     </div>
 </div>
 
+<!-- Modal anular venta -->
+
+<div class="modal fade" id="modal-anular-venta" class="modal-dom modal-anular-venta" tabindex="-1" role="dialog"
+    aria-labelledby="modal-productos-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-productos-title">Anular venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="feather feather-x">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="col-lg-12 layout-spacing">
+                <form action="#">
+                    @csrf
+                    <div class="wizard_sale">
+
+                        <h3>Venta</h3>
+                        <section>
+
+                            <p class="mt-1">Razon de anulación</p>
+                            <div class="mb-4">
+                                <textarea name="motivo_anulacion" id="motivo_anulacion" cols="30" rows="10" class="form-control" placeholder="Motivo de anulación"></textarea>
+                            </div>
+
+                        </section>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal editar venta -->
+
+<div class="modal fade" id="modal-cobrar-venta" class="modal-dom" tabindex="-1" role="dialog"
+    aria-labelledby="modal-productos-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-productos-title">Cerrar venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="feather feather-x">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="col-lg-12 layout-spacing">
+                <form action="#">
+                    @csrf
+                    <div class="wizard_cobrar_venta">
+
+                        <h3>Cliente</h3>
+                        <section>
+
+                            <p class="mt-1">Forma de venta</p>
+                            <div class="mb-4">
+                                <select class="form-control" id="status_sale_pay" name="status_sale" required>
+                                    <option disabled selected>Seleccionar tipo de venta</option>
+                                    <option value="in_parts">En Partes</option>
+                                    <option value="charged">Cobrar total</option>
+                                </select>
+                            </div>
+
+                            @if ( $descuentos->count() > 0 )
+                                <div class="mt-4 mb-4">
+                                    <select class="form-control" name="discount_sale_select" id="discount_sale_select_pay" required>
+                                        <option value="ninguno" selected>Ningun descuento</option>
+                                        @foreach ( $descuentos as $descuento )
+                                            <option value="{{ $descuento->id }}">{{ $descuento->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            @if ( $pagos->count() > 0 )
+                                <div class="mt-4 mb-4">
+                                    <select class="form-control" name="payment_sale" id="payment_sale_pay">
+                                        <option value="ninguno">Pago en efectivo</option>
+                                        @foreach ( $pagos as $pago )
+                                            <option value="{{ $pago->id }}">{{ $pago->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+
+                            <div id="div_payment_type_sale">
+                            </div>
+
+                        </section>
+
+                        <h3>Detalle</h3>
+                        <section>
+
+                                <div class="widget-activity-three">
+
+                                    <div class="timeline-line">
+
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Cliente</h5>
+                                                </div>
+                                                <p id="modal_cliente"><span>Juan valder</span> (pago contado)</p>
+                                                <div class="tags">
+                                                    {{-- <div class="badge badge-primary">Matricula: AA-100</div>
+                                                    <div class="badge badge-success">Nuevo</div> --}}
+                                                    {{-- <div class="badge badge-warning" id="modal_vendedor">Atendido por: Juan</div> --}}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="item-timeline timeline-new product_list_modal" id="product_list_modal_pay">
+                                            <div class="t-dot">
+                                                <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-archive"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Productos</h5>
+                                                </div>
+                                                <div class="t-uppercontent">
+                                                    <p>3 Motores</p>
+                                                    <span class="">S/.100-00</span>
+                                                </div>
+                                                <div class="t-uppercontent">
+                                                    <p>3 Motores</p>
+                                                    <span class="">S/.100-00</span>
+                                                </div>
+                                                <div class="t-uppercontent">
+                                                    <p>3 Motores</p>
+                                                    <span class="">S/.100-00</span>
+                                                </div>
+                                                <div class="tags">
+                                                    <div class="badge badge-primary">Admin</div>
+                                                    <div class="badge badge-success">HR</div>
+                                                    <div class="badge badge-warning">Mail</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Subtotal</h5>
+                                                </div>
+                                                <p class="subtotal_modal">S/.0.00</p>
+                                            </div>
+                                        </div>
+
+
+
+
+                                        @if ( $documentos->count() > 0 )
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Documentos</h5>
+                                                        <span class="documento_tipo_modal">BOLETA</span>
+                                                    </div>
+                                                    <p class="documento_modal">S/.0.00</p>
+                                                </div>
+                                            </div>
+                                        @endif
+
+                                        @if ( $descuentos->count() > 0 )
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-danger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5 class="descuento_titulo_modal">Descuento</h5>
+                                                        {{-- <span class="">Monto fijo</span> --}}
+                                                    </div>
+                                                    <p class="descuento_modal">S/.0</p>
+                                                </div>
+                                            </div>
+                                        @endif
+
+
+
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-dark"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-server"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6" y2="6"></line><line x1="6" y1="18" x2="6" y2="18"></line></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Total</h5>
+                                                </div>
+                                                <p class="total_modal">S/.1000</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="item-timeline timeline-new div_adelanto_modal">
+                                            <div class="t-dot">
+                                                <div class="t-warning">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                </div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Adelanto</h5>
+                                                </div>
+                                                <p class="adelanto_modal">S/.1000</p>
+                                            </div>
+                                        </div>
+
+                                        @if ( $pagos->count() > 0 )
+
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Forma de pago</h5>
+                                                        <span class="forma_pago_tipo_modal">Efectivo</span>
+                                                    </div>
+                                                    <p class="forma_pago_modal">Efectivo S/.0.00</p>
+                                                </div>
+                                            </div>
+
+                                        @endif
+
+
+
+                                        <div class="item-timeline timeline-new div_adelanto_modal">
+
+                                            <div class="t-dot">
+                                                <div class="t-dark">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                </div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Adelantos anteriores</h5>
+                                                </div>
+                                                <p class="adelanto_acumulado_modal">S/.1000</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="item-timeline timeline-new div_adelanto_modal">
+                                            <div class="t-dot">
+                                                <div class="t-dark">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                                </div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Restante</h5>
+                                                </div>
+                                                <p class="restante_modal">S/.1000</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                        </section>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ver productos -->
+<div class="modal fade" id="modal-producto-venta" class="modal-dom" tabindex="-1" role="dialog"
+    aria-labelledby="modal-productos-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-productos-title">Cerrar venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="feather feather-x">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="col-lg-12 layout-spacing">
+                <form action="#">
+                    <div class="wizard_producto_venta">
+
+                        <h3>Cliente</h3>
+                        <section>
+
+                            <div class="block_agregar_producto">
+                                <p class="mt-1">Produtos para agregar</p>
+                                <div class="form-row">
+                                    <div class="list_productos col-12 mb-4">
+                                    </div>
+                                    <div class="col-5">
+                                        <select class="form-control form-small select2_modal" id="select-producto-agregar">
+                                            <option selected="selected">Selecciona un producto</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="text" name="txt" placeholder="Cantidad" class="form-control" id="select-producto-cantidad">
+                                    </div>
+                                    <div class="col-2">
+                                        <button class="btn btn-success mt-1 add_productos" style="width: 100%;">+</button>
+                                    </div>
+
+                                    <!-- Input hidden para almacenar los datos en formato JSON -->
+                                    <input type="hidden" name="productos_kit" id="productos_kit" value="[]">
+
+                                </div>
+                            </div>
+
+                        </section>
+
+                        <h3>Detalle</h3>
+                        <section>
+
+                            <div class="widget-activity-three">
+
+                                <div class="timeline-line">
+
+                                    <div class="item-timeline timeline-new">
+                                        <div class="t-dot">
+                                            <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Cliente</h5>
+                                            </div>
+                                            <p id="modal_cliente"><span>Juan valder</span> (pago contado)</p>
+                                            <div class="tags">
+                                                {{-- <div class="badge badge-primary">Matricula: AA-100</div>
+                                                <div class="badge badge-success">Nuevo</div> --}}
+                                                {{-- <div class="badge badge-warning" id="modal_vendedor">Atendido por: Juan</div> --}}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="item-timeline timeline-new product_list_modal" id="product_list_modal_pay">
+                                        <div class="t-dot">
+                                            <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-archive"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Productos</h5>
+                                            </div>
+                                            <div class="t-uppercontent">
+                                                <p>3 Motores</p>
+                                                <span class="">S/.100-00</span>
+                                            </div>
+                                            <div class="t-uppercontent">
+                                                <p>3 Motores</p>
+                                                <span class="">S/.100-00</span>
+                                            </div>
+                                            <div class="t-uppercontent">
+                                                <p>3 Motores</p>
+                                                <span class="">S/.100-00</span>
+                                            </div>
+                                            <div class="tags">
+                                                <div class="badge badge-primary">Admin</div>
+                                                <div class="badge badge-success">HR</div>
+                                                <div class="badge badge-warning">Mail</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="item-timeline timeline-new">
+                                        <div class="t-dot">
+                                            <div class="t-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-dollar-sign"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Subtotal</h5>
+                                            </div>
+                                            <p class="subtotal_modal">S/.0.00</p>
+                                        </div>
+                                    </div>
+
+                                    @if ( $documentos->count() > 0 )
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Documentos</h5>
+                                                    <span class="documento_tipo_modal">BOLETA</span>
+                                                </div>
+                                                <p class="documento_modal">S/.0.00</p>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if ( $descuentos->count() > 0 )
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-danger"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5 class="descuento_titulo_modal">Descuento</h5>
+                                                    {{-- <span class="">Monto fijo</span> --}}
+                                                </div>
+                                                <p class="descuento_modal">S/.0</p>
+                                            </div>
+                                        </div>
+                                    @endif
+
+
+
+                                    <div class="item-timeline timeline-new">
+                                        <div class="t-dot">
+                                            <div class="t-dark"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-server"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6" y2="6"></line><line x1="6" y1="18" x2="6" y2="18"></line></svg></div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Total</h5>
+                                            </div>
+                                            <p class="total_modal">S/.1000</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="item-timeline timeline-new div_adelanto_modal">
+                                        <div class="t-dot">
+                                            <div class="t-warning">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                            </div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Adelanto</h5>
+                                            </div>
+                                            <p class="adelanto_modal">S/.1000</p>
+                                        </div>
+                                    </div>
+
+                                    @if ( $pagos->count() > 0 )
+                                        <div class="item-timeline timeline-new">
+                                            <div class="t-dot">
+                                                <div class="t-warning"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg></div>
+                                            </div>
+                                            <div class="t-content">
+                                                <div class="t-uppercontent">
+                                                    <h5>Forma de pago</h5>
+                                                    <span class="forma_pago_tipo_modal">Efectivo</span>
+                                                </div>
+                                                <p class="forma_pago_modal">Efectivo S/.0.00</p>
+                                            </div>
+                                        </div>
+                                    @endif
+
+
+
+                                    <div class="item-timeline timeline-new div_adelanto_modal">
+
+                                        <div class="t-dot">
+                                            <div class="t-dark">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                            </div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Adelantos anteriores</h5>
+                                            </div>
+                                            <p class="adelanto_acumulado_modal">S/.1000</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="item-timeline timeline-new div_adelanto_modal">
+                                        <div class="t-dot">
+                                            <div class="t-dark">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                            </div>
+                                        </div>
+                                        <div class="t-content">
+                                            <div class="t-uppercontent">
+                                                <h5>Restante</h5>
+                                            </div>
+                                            <p class="restante_modal">S/.1000</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ver usuario -->
+<div class="modal fade" id="modal-cliente-venta" class="modal-dom" tabindex="-1" role="dialog"
+    aria-labelledby="modal-productos-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-productos-title">Cerrar venta</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="feather feather-x">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="col-lg-12 layout-spacing">
+                <form action="#">
+                    <div class="wizard">
+
+                        <div class="content clearfix">
+                            <section style="padding:20px;">
+
+                                    <div class="widget-activity-three">
+
+                                        <div class="timeline-line">
+
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Cliente</h5>
+                                                    </div>
+                                                    <p id="modal_cliente_sale_data"><span>Juan valder</span> (pago contado)</p>
+                                                    <div class="tags">
+                                                        <div class="badge badge-primary" id="modal_matricula_sale_data">Matricula: AA-100</div>
+                                                        <div class="badge badge-warning" id="modal_vendedor_sale_data">Atendido por: Juan</div>
+                                                        {{-- <div class="badge badge-success">Nuevo</div> --}}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-timeline timeline-new product_list_modal" id="product_list_modal_pay">
+                                                <div class="t-dot">
+                                                    <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-archive"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></div>
+                                                </div>
+                                                <div class="t-content" id="modal_documentacion_sale_data">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Productos (documentación)</h5>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p><a href="">3 Motores</a></p>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p><a href="">3 Motores</a></p>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p><a href="">3 Motores</a></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="item-timeline timeline-new product_list_modal" id="product_list_modal_pay">
+                                                <div class="t-dot">
+                                                    <div class="t-success"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-archive"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></div>
+                                                </div>
+                                                <div class="t-content" id="modal_cliente_adelanto_data">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Adelantos</h5>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p>14/03/24</p>
+                                                        <span class="">S/.100-00</span>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p>14/03/24</p>
+                                                        <span class="">S/.100-00</span>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p>14/03/24</p>
+                                                        <span class="">S/.100-00</span>
+                                                    </div>
+                                                    <div class="t-uppercontent">
+                                                        <p>14/03/24</p>
+                                                        <span class="">S/.100-00</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-primary"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Documentos</h5>
+                                                        <span class="" id="modal_documento_sale_data">BOLETA</span>
+                                                    </div>
+                                                    <p class="" id="modal_codigo_sale_data">codigo</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-timeline timeline-new div_adelanto_modal">
+                                                <div class="t-dot">
+                                                    <div class="t-warning">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                    </div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Adelanto hasta el momento</h5>
+                                                    </div>
+                                                    <p class="adelanto_modal" id="modal_adelanto_final_sale_data">S/.1000</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-timeline timeline-new div_adelanto_modal">
+                                                <div class="t-dot">
+                                                    <div class="t-dark">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-alert-triangle"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                                    </div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Restante</h5>
+                                                    </div>
+                                                    <p class="" id="modal_restante_sale_data">S/.1000</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="item-timeline timeline-new">
+                                                <div class="t-dot">
+                                                    <div class="t-dark"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-server"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6" y2="6"></line><line x1="6" y1="18" x2="6" y2="18"></line></svg></div>
+                                                </div>
+                                                <div class="t-content">
+                                                    <div class="t-uppercontent">
+                                                        <h5>Total</h5>
+                                                    </div>
+                                                    <p class="" id="modal_total_sale_data">S/.1000</p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                            </section>
+                        </div>
+
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal agregar gasto -->
+
+<div class="modal fade" id="modal-gastos" class="modal-dom modal-gastos" tabindex="-1" role="dialog"
+    aria-labelledby="modal-productos-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-productos-title">Agregar gasto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" class="feather feather-x">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="col-lg-12 layout-spacing">
+                <form action="#">
+                    @csrf
+                    <div class="wizard_sale">
+
+                        <h3>Gasto</h3>
+                        <section>
+
+                            <p class="mt-1">Precio para el cliente</p>
+                            <div class="mb-4">
+                                <input class="input_gasto" type="text" value="0" name="expense_input">
+                            </div>
+
+                            <p class="mt-1">Razon de anulación</p>
+                            <div class="mb-4">
+                                <textarea name="motivo_anulacion" id="motivo_anulacion" cols="30" rows="10" class="form-control" placeholder="Motivo de anulación"></textarea>
+                            </div>
+
+                        </section>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!--  END CONTENT AREA  -->
+
 
 @endsection

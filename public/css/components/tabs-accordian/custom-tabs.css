@@ -32,8 +32,6 @@
 .nav-tabs li a.disabled {
   color: #acb0c3 !important; }
 
-.nav-pills .nav-item:not(:last-child) {
-  margin-right: 5px; }
 
 .nav-pills .nav-link {
   color: #3b3f5c; }
@@ -251,7 +249,7 @@ h4 {
   padding: 20px 0 0 0; }
 
 /*
-    With Icons   
+    With Icons
 */
 .rounded-pills-icon .nav-pills li a {
   -webkit-border-radius: 0.625rem !important;
@@ -306,7 +304,7 @@ h4 {
   border-color: transparent; }
 
 /*
-    Rouned Circle With Icons   
+    Rouned Circle With Icons
 */
 .rounded-circle-pills-icon .nav-pills li a {
   background-color: #f1f2f3;

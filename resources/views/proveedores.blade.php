@@ -72,6 +72,7 @@
                                     <option selected disabled>Documento de usuario</option>
                                     <option value="dni">DNI</option>
                                     <option value="pasaporte">Pasaporte</option>
+                                    <option value="ruc">RUC</option>
                                 </select>
                             </div>
 

@@ -1,4 +1,4 @@
-/*  
+/*
     ======================
         Color Pallet
     ======================
@@ -7,8 +7,8 @@
 #colorPallet {
     position: fixed;
     top: 96px;
-    right: -114px;
-    width: 150px;
+    left: 97%;
+    width: max-content;
     z-index: 1030;
     display: flex;
     background: rgb(236, 230, 246);
@@ -19,7 +19,7 @@
     transition: .3s ease all;
 }
 #colorPallet.show {
-    right: 0;
+    left: 75%;
 }
 #colorPallet .pallet-icon {
     display: inline-block;
@@ -48,8 +48,8 @@
     /*display: flex;*/
 }
 #colorPallet .p-colors [class*="color-scheme-"] {
-    height: 25px;
-    width: 25px;
+    min-height: 25px;
+    min-width: 25px;
     background: #000;
     border-radius: 5px;
     display: inline-block;

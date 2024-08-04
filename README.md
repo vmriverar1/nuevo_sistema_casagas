@@ -1,70 +1,77 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Proyecto
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Pendienters
 
-## About Laravel
+### Caja
+- [ x ] Modal por cobrar quitar descuentos, métodos de pago y documentos
+- [ x ] Revisar volver a guardar rápido en proceso
+- [ x ] Revisar volver a guardar rápido en partes
+- [ x ] mejorar el boleto para que calcule independientemente los totales
+- [ x ] Revisar agregar productos
+- [ x ] Revisar agregar adelanto
+- [ x ] Revisar eliminar ventas
+- [ x ] Problema al agregar producto en el modal aparece mal el total que nodeberia incluir adelantos en etotal de modal cobrar
+- [ x ] Revisar proceso completo venta en partes
+- [ x ] Revisar proceso completo venta en proceso
+- [ x ] Actualizar Ventas al guardar, eliminar o editar Venta
+- [ x ] Actualizar Boleta al guardar o editar Venta
+- [ x ] Actualizar Productos al guardar, eliminar o editar Venta
+- [ x ] Revisar buscador de clientes por dni o matricula
+- [ x ] Revisar buscador de productos
+- [ x ] Cambiar la palabra Total a por pagar en venta en proceso
+- [ x ] Boton x de modal para cerrar modal
+- [  ] Revisar calculador antes de terminar venta
+- [  ] No abre modal por segunda vez
+- [  ] revisar adelanto aveces no se actualiza correctamente en obj caja
+- [  ] Verificar descuento de productos
+- [  ] Revisar si al agregar adelanto en modal las restricciones son correctas
+- [  ] Agregaar restricciones para adelantos en controlador
+- [  ] desde el controlador antes de actualizar y guardar se debe verificar el monto y el total
+- [  ] verificar cantidades en caja
+- [  ] Al editar una venta en partes debe probarse desde el controlador y js que al eliminar un producto no afecte el total y adelantos
+- [  ] Agregar alert con respueta del servidor
+- [  ] Revisar gestión de caja al crear, editar o eliminar ventas en partes
+- [  ] Revisar gestión de productos al crear, editar o eliminar ventas en partes
+- [  ] Revisar gestión de caja al crear, editar o eliminar ventas cobradas
+- [  ] Revisar gestión de productos al crear, editar o eliminar ventas cobradas
+- [  ] No puedo eliminar varias ventas seguidas sin que se malogre wizard
+- [  ] Al editar ventas en nombre de cliente no me sale el nombre que deberia
+- [  ] Tras dar varios adelantos no se guarda
+- [  ] Activar opción de requerir placa en un producto y probar
+- [  ] Verificar stock al trabajar con paquetes
+- [  ] servicios con precios personalizados
+- [  ] Revisar informe de cliente en boleta de venta
+- [  ] funciónm para check de servicios
+- [  ] modulo de consulta de productos multitienda
+- [  ] Descxuento libre en ventas
+- [  ] Pagos o gastos en caja
+- [  ] Comprobar stock con error desde controlador
+- [  ] Descontando doble producto
+- [  ] Hacer venta creando usuario
+- [  ] Revisar calculadora antes de terminar venta cuando hay descuento
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] 
+- [  ] Revisar cancelar en partes
+- [  ] Revisar cancelar en proceso
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Super Admin (acceso total)
+- Admin (Solo tienda - ver prod de tiendas, traslado, solo aumentar la venta, crear prod, trasladar, agregar productos creados, )
+- Caja (solo caja y ver stock productos, traslado de productos)
+- Técnico (solo crea ventas y servicios, check de servicios terminados, revisar datos des servicios)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Learning Laravel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## Notas
-
-Generar código de ingreso de productos
+admin
+admin@casagas.com
+conejito12

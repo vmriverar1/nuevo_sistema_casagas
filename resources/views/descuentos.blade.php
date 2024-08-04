@@ -8,7 +8,7 @@
 
     <div class="page-header">
         <div class="page-title">
-            <h3>Requerimientos</h3>
+            <h3>Descuentos</h3>
         </div>
     </div>
 
@@ -22,6 +22,8 @@
                             <tr>
                                 <th>Nombre</th>
                                 <th>Tipo</th>
+                                <th>Porcentaje</th>
+                                <th>Estado</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
@@ -37,12 +39,12 @@
 </div>
 
 
-<div class="modal fade" id="modal-requirements" class="modal-dom" tabindex="-1" role="dialog"
+<div class="modal fade" id="modal-discounts" class="modal-dom" tabindex="-1" role="dialog"
     aria-labelledby="modal-requirements-title" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-requirements-title">Modal Requerimiento</h5>
+                <h5 class="modal-title" id="modal-requirements-title">Modal Descuentos</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -60,18 +62,31 @@
                             <h3>Básico</h3>
                             <section>
                                 <div class="form-group">
-                                    <input type="text" name="name" placeholder="Nombre de almacén"
+                                    <input type="text" name="name" placeholder="Nombre de descuento"
                                         class="form-control" required>
                                 </div>
+
+                                <select class="form-control form-small" name="type">
+                                    <option selected="selected" disabled>Tipo de descuento</option>
+                                    <option value="porcentaje">Pocentaje</option>
+                                    <option value="fijo">Fijo</option>
+                                </select>
+
+                                <div class="stock">
+                                    <p class="mt-1">Cantidad</p>
+                                    <div class="mb-4">
+                                        <input class="input_cantidad" type="text" value="" name="markdown" required>
+                                    </div>
+                                </div>
+
                             </section>
                             <h3>Detalles</h3>
                             <section>
 
-                                <select class="form-control form-small" name="type">
-                                    <option selected="selected" disabled>Tipo de reuqerimiento</option>
-                                    <option value="documentos">Doumento</option>
-                                    <option value="imagen">Imagen</option>
-                                    <option value="texto">Texto</option>
+                                <select class="form-control form-small" name="status">
+                                    <option selected="selected" disabled>Status del descuento</option>
+                                    <option value="Activado">Activado</option>
+                                    <option value="Desactivado">Desactivado</option>
                                 </select>
 
                             </section>

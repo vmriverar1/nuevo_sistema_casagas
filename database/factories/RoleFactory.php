@@ -18,9 +18,15 @@ class RoleFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->jobTitle,
-            'description' => $this->faker->optional()->sentence,
-            'branch_id' => $this->faker->numberBetween(1, 10),
+            'name' => "Super Admin",
+            'description' => "Administrador general",
+            'branch_id' => 1,
         ];
+
+        // return [
+        //     'name' => $this->faker->unique()->jobTitle,
+        //     'description' => $this->faker->optional()->sentence,
+        //     'branch_id' => $this->faker->numberBetween(1, 10),
+        // ];
     }
 }

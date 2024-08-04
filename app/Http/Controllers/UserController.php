@@ -118,70 +118,103 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string|min:8',
-            'role' => 'required|exists:roles,id',
-            'document' => 'nullable|string|max:255',
-            'document_type' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'birthday' => 'nullable|date',
-            'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
-            'status' => 'nullable|string|max:255',
-            'profile' => 'nullable|string|max:255',
-            'data' => 'nullable|array',
-        ]);
+        // Definir los mensajes de error personalizados
+        $messages = [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no debe ser mayor que 255 caracteres.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.string' => 'El correo electrónico debe ser una cadena de texto.',
+            'email.email' => 'El correo electrónico debe ser una dirección válida.',
+            'email.max' => 'El correo electrónico no debe ser mayor que 255 caracteres.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.string' => 'La contraseña debe ser una cadena de texto.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'role.required' => 'El rol es obligatorio.',
+            'role.exists' => 'El rol seleccionado es inválido.',
+            'document.unique' => 'El documento dni o pasaporte ya ha sido registrado.',
+            'photo.image' => 'La foto debe ser una imagen.',
+            'photo.mimes' => 'La foto debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+            'photo.max' => 'La foto no debe ser mayor que 2048 kilobytes.',
+            'birthday.date' => 'La fecha de nacimiento no es una fecha válida.',
+            'data.array' => 'El campo data debe ser un arreglo.',
+        ];
+
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
+                'password' => 'required|string|min:8',
+                'role' => 'required|exists:roles,id',
+                'document' => 'nullable|string|max:255|unique:users,document',
+                'document_type' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'birthday' => 'nullable|date',
+                'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
+                'status' => 'nullable|string|max:255',
+                'profile' => 'nullable|string|max:255',
+                'data' => 'nullable|array',
+            ], $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
 
         $branch = BranchHelper::getBranchIdFromSession();
-        if ($branch instanceof \Illuminate\Http\JsonResponse) {
-            return $branch;
-        }
 
         DB::beginTransaction();
         try {
             $user = User::where('email', $request['email'])->first();
             if ($user) {
-                // Log::error('Usuario existe.');
                 $updateData = $request->except(['email', 'password']);
                 $updateData['photo'] = PhotoHelper::updatePhoto($user, 'users', $request);
                 $user->update($updateData);
-            }else{
-                // Log::error('Usuario no existe.');
+            } else {
                 $validatedData['photo'] = PhotoHelper::submitPhoto('users', $request);
+                $validatedData['phone'] = $validatedData['phone'] ?? 'No disponible';
+                $validatedData['address'] = $validatedData['address'] ?? 'No disponible';
                 $validatedData['password'] = Hash::make($validatedData['password']);
                 $user = User::create($validatedData);
             }
 
-            // Verificar y asociar la relación user_branch
             if ($branch && !$user->branches()->where('branch_id', $branch->id)->exists()) {
                 $user->branches()->attach($branch->id);
             }
 
-            // Verificar y asociar la relación role_user
             $roleId = $request->role;
-            $currentRoleId = $user->roles()->pluck('role_id')->first();
+            $currentRole = DB::table('role_user')
+                ->where('user_id', $user->id)
+                ->where('branch_id', $branch->id)
+                ->first();
 
-            if ($currentRoleId && $currentRoleId != $roleId) {
-                // Actualizar el rol si es diferente
-                $user->roles()->sync([$roleId]);
-                Log::info('Rol actualizado para el usuario.', ['user_id' => $user->id, 'role_id' => $roleId]);
-            } elseif (!$currentRoleId) {
-                // Crear la relación si no existe
-                $user->roles()->attach($roleId);
-                Log::info('Rol asignado para el usuario.', ['user_id' => $user->id, 'role_id' => $roleId]);
+            if ($currentRole && $currentRole->role_id != $roleId) {
+                DB::table('role_user')
+                    ->where('user_id', $user->id)
+                    ->where('branch_id', $branch->id)
+                    ->update(['role_id' => $roleId]);
+            } elseif (!$currentRole) {
+                $user->roles()->attach($roleId, ['branch_id' => $branch->id]);
             }
 
             DB::commit();
             return response()->json($user, 201);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            if ($e->errorInfo[1] == 1062) {
+                return response()->json(['error' => 'El documento ya existe en la base de datos.'], 409);
+            } elseif ($e->errorInfo[1] == 1048) {
+                return response()->json(['error' => 'Un campo requerido contiene un valor nulo.'], 400);
+            }
+            Log::error('Error al guardar el usuario: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al guardar el usuario.'], 500);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al guardar el usuario: ' . $e->getMessage());
             return response()->json(['error' => 'Error al guardar el usuario.'], 500);
         }
-
     }
+
 
     /**
      * Display the specified resource.
@@ -199,21 +232,48 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255',
-            'password' => 'string|min:8|nullable',
-            'role' => 'required|exists:roles,id',
-            'document' => 'nullable|string|max:255',
-            'document_type' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'birthday' => 'nullable|date',
-            'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
-            'status' => 'nullable|string|max:255',
-            'profile' => 'nullable|string|max:255',
-            'data' => 'nullable|array',
-        ]);
+        // Definir los mensajes de error personalizados
+        $messages = [
+            'name.required' => 'El nombre es obligatorio.',
+            'name.string' => 'El nombre debe ser una cadena de texto.',
+            'name.max' => 'El nombre no debe ser mayor que 255 caracteres.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.string' => 'El correo electrónico debe ser una cadena de texto.',
+            'email.email' => 'El correo electrónico debe ser una dirección válida.',
+            'email.max' => 'El correo electrónico no debe ser mayor que 255 caracteres.',
+            'password.string' => 'La contraseña debe ser una cadena de texto.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'role.required' => 'El rol es obligatorio.',
+            'role.exists' => 'El rol seleccionado es inválido.',
+            'document.unique' => 'El documento ya ha sido registrado.',
+            'photo.image' => 'La foto debe ser una imagen.',
+            'photo.mimes' => 'La foto debe ser un archivo de tipo: jpeg, png, jpg, gif.',
+            'photo.max' => 'La foto no debe ser mayor que 2048 kilobytes.',
+            'birthday.date' => 'La fecha de nacimiento no es una fecha válida.',
+            'data.array' => 'El campo data debe ser un arreglo.',
+        ];
+
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255',
+                'password' => 'string|min:8|nullable',
+                'role' => 'required|exists:roles,id',
+                'document' => 'nullable|string|max:255|unique:users,document,' . $user->id,
+                'document_type' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'birthday' => 'nullable|date',
+                'photo' => 'image|mimes:jpeg,png,jpg,gif|max:2048|nullable',
+                'status' => 'nullable|string|max:255',
+                'profile' => 'nullable|string|max:255',
+                'data' => 'nullable|array',
+            ], $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        }
+
+        $branch = BranchHelper::getBranchIdFromSession();
 
         DB::beginTransaction();
         try {
@@ -229,28 +289,44 @@ class UserController extends Controller
 
             // Verificar y asociar la relación role_user
             $roleId = $request->role;
-            $currentRoleId = $user->roles()->pluck('role_id')->first();
+            $currentRole = DB::table('role_user')
+                ->where('user_id', $user->id)
+                ->where('branch_id', $branch->id)
+                ->first();
 
-            if ($currentRoleId && $currentRoleId != $roleId) {
+            if ($currentRole && $currentRole->role_id != $roleId) {
                 // Actualizar el rol si es diferente
-                $user->roles()->sync([$roleId]);
-                Log::info('Rol actualizado para el usuario.', ['user_id' => $user->id, 'role_id' => $roleId]);
-            } elseif (!$currentRoleId) {
+                DB::table('role_user')
+                    ->where('user_id', $user->id)
+                    ->where('branch_id', $branch->id)
+                    ->update(['role_id' => $roleId]);
+            } elseif (!$currentRole) {
                 // Crear la relación si no existe
-                $user->roles()->attach($roleId);
-                Log::info('Rol asignado para el usuario.', ['user_id' => $user->id, 'role_id' => $roleId]);
+                $user->roles()->attach($roleId, ['branch_id' => $branch->id]);
             }
 
             DB::commit();
-
             return response()->json($user);
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+
+            if ($e->errorInfo[1] == 1062) {
+                Log::error('Error al actualizar el usuario: Duplicidad de entrada.', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'El documento ya existe en la base de datos.'], 409);
+            } elseif ($e->errorInfo[1] == 1048) {
+                Log::error('Error al actualizar el usuario: Valor nulo no permitido.', ['error' => $e->getMessage()]);
+                return response()->json(['error' => 'Un campo requerido contiene un valor nulo.'], 400);
+            }
+
+            Log::error('Error al actualizar el usuario: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al actualizar el usuario.'], 500);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al actualizar el usuario: ' . $e->getMessage());
             return response()->json(['error' => 'Error al actualizar el usuario.'], 500);
         }
-
     }
+
 
     /**
      * Remove the specified resource from storage.

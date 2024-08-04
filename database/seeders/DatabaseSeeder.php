@@ -24,25 +24,30 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $faker = Faker::create();
-        Branch::factory(10)->create();
-        Role::factory()->count(5)->create();
+        Branch::factory(1)->create();
+        // Branch::factory(10)->create();
+        $this->createRoles();
+        // Role::factory()->count(5)->create();
 
-        User::factory()->count(35)->create()->each(function ($user) use ($faker) {
+        // User::factory()->count(35)->create()->each(function ($user) use ($faker) {
+        User::factory()->count(1)->create()->each(function ($user) use ($faker) {
 
             // ==============================================
             // PIVOTE ADMINSTRADOR DE EMPRESAS
             // ==============================================
 
-            $branch = $faker->numberBetween(1, 10);
+            // $branch = $faker->numberBetween(1, 10);
             $exists = DB::table('admin_branch')
                           ->where('user_id', $user->id)
-                          ->where('branch_id', $branch)
+                        //   ->where('branch_id', $branch)
+                          ->where('branch_id', "1")
                           ->exists();
 
             if (!$exists) {
                 DB::table('admin_branch')->insert([
                     'user_id' => $user->id,
-                    'branch_id' => $branch,
+                    // 'branch_id' => $branch,
+                    'branch_id' => "1",
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -52,40 +57,50 @@ class DatabaseSeeder extends Seeder
             //PIVOTE PARA USUARIOS POR RAMA
             // ==============================================
 
-            for ($i=0; $i < $faker->numberBetween(4, 7); $i++) {
-                $branch = $faker->numberBetween(1, 10);
+            // for ($i=0; $i < $faker->numberBetween(4, 7); $i++) {
+                // $branch = $faker->numberBetween(1, 10);
                 $exists = DB::table('user_branch')
                               ->where('user_id', $user->id)
-                              ->where('branch_id', $branch)
+                              ->where('branch_id', "1")
+                            //   ->where('branch_id', $branch)
                               ->exists();
 
                 if (!$exists) {
                     DB::table('user_branch')->insert([
                         'user_id' => $user->id,
-                        'branch_id' => $branch,
-                        'status' => $faker->randomElement(['activo', 'inactivo', 'suspendido']),
+                        // 'branch_id' => $branch,
+                        'branch_id' => "1",
+                        'status' => 'activo',
+                        // 'status' => $faker->randomElement(['activo', 'inactivo', 'suspendido']),
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
                 }
-            }
+            // }
 
             // PIVOTE ROLES DE USUARIOS
-            $roles = $faker->numberBetween(1, 5);
+            // $roles = $faker->numberBetween(1, 5);
             $exists = DB::table('role_user')
                           ->where('user_id', $user->id)
-                          ->where('role_id', $roles)
+                        //   ->where('role_id', $roles)
+                          ->where('role_id', "1")
+                          ->where('branch_id', "1")
                           ->exists();
 
             if (!$exists) {
                 DB::table('role_user')->insert([
                     'user_id' => $user->id,
-                    'role_id' => $roles,
+                    // 'role_id' => $roles,
+                    'role_id' => "1",
+                    'branch_id' => "1",
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
         });
+
+
+        return;
 
         Category::factory()->count(50)->create();
         Brand::factory()->count(50)->create();
@@ -355,5 +370,20 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+    }
+
+    private function createRoles(): void
+    {
+        $roles = [
+            ['name' => 'Super admin', 'description' => 'Tiene acceso a todas las funcionalidades del sistema'],
+            ['name' => 'Administrador', 'description' => 'Administra las operaciones diarias'],
+            ['name' => 'Vendedor', 'description' => 'Gestiona las ventas y la relación con los clientes'],
+            ['name' => 'Técnico', 'description' => 'Encargado de soporte técnico y mantenimiento'],
+            ['name' => 'Caja', 'description' => 'Responsable de las operaciones de caja y pagos'],
+        ];
+
+        foreach ($roles as $role) {
+            Role::create($role);
+        }
     }
 }

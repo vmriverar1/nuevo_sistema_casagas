@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\Branch;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BranchHelper
@@ -28,5 +29,41 @@ class BranchHelper
         }
 
         return $branch;
+    }
+
+    public static function createRelation($table, $userId, $branchId, $additionalData = [])
+    {
+        $exists = DB::table($table)
+            ->where('user_id', $userId)
+            ->where('branch_id', $branchId)
+            ->exists();
+
+        if (!$exists) {
+            $data = array_merge([
+                'user_id' => $userId,
+                'branch_id' => $branchId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ], $additionalData);
+
+            DB::table($table)->insert($data);
+        }
+    }
+
+    public static function updateRelation($table, $userId, $branchId, $additionalData = [])
+    {
+        $exists = DB::table($table)
+            ->where('user_id', $userId)
+            ->where('branch_id', $branchId)
+            ->exists();
+
+        if ($exists) {
+            DB::table($table)
+                ->where('user_id', $userId)
+                ->where('branch_id', $branchId)
+                ->update(array_merge(['updated_at' => now()], $additionalData));
+        } else {
+            self::createRelation($table, $userId, $branchId, $additionalData);
+        }
     }
 }

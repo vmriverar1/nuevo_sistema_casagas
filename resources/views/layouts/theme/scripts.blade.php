@@ -47,7 +47,10 @@
 
 @elseif (request()->routeIs('requerimientos'))
     <script src="{{ asset("views/requerimientos.js") }}"></script>
-
+@elseif (request()->routeIs('descuentos'))
+    <script src="{{ asset("views/descuento.js") }}"></script>
+@elseif (request()->routeIs('documentos'))
+    <script src="{{ asset("views/documentos.js") }}"></script>
 @elseif (request()->routeIs('codigos'))
     <script src="{{ asset("views/codigos.js") }}"></script>
 

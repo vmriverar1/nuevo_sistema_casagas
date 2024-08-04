@@ -6,6 +6,7 @@ use App\Models\PettyCash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class PettyCashController extends Controller
 {
@@ -23,16 +24,13 @@ class PettyCashController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'responsible' => 'required|string|max:255',
-            'income' => 'required|numeric',
-            'expense' => 'required|numeric',
-            'initial' => 'required|numeric',
-            'status' => 'required|string|in:abierta,cerrada,desactivada',
-            'branch_id' => 'required|exists:branches,id',
-        ]);
-
-        $pettyCash = PettyCash::create($validatedData);
+        $pettyCash = new PettyCash();
+        $pettyCash->responsible_id = Auth::id();
+        $pettyCash->income = 0;
+        $pettyCash->expense = 0;
+        $pettyCash->initial = $request->input('initial_cash') ?? 0;
+        $pettyCash->status = 'abierta';
+        $pettyCash->save();
 
         return response()->json($pettyCash, 201);
     }

@@ -36,69 +36,67 @@ const paso_agregar_botones = `
         </div>
     </div>
     <div style="flex-direction: row; display: flex; justify-content: space-around;">
-        <p class="mt-1 total_modal" style="font-size: 23px; font-weight: 800; color: #00a90b;"> Total: S/.0.00<p/>
+        <p class="mt-1 total_modal_calculadora" style="font-size: 23px; font-weight: 800; color: #00a90b;"> Total: S/.0.00<p/>
         <p class="mt-1" id="vuelto_modal" style="font-size: 23px; font-weight: 800; color: #a90017;"> Vuelto: S/.0.00<p/>
     </div>
 </section>
 `;
 
-function removeStepByTitle(title) {
-    var steps = $('.wizard').find('h3');
+function createStepByTitle(newTitle, referenceTitle, before, content, number = 1000) {
+    var steps = (caja.modal_tipe == 'create') ? $('.wizard').find('h3') : $('.wizard_cobrar_venta').find('h3');
+    var referenceIndex = -1;
+
+    // Buscar el índice del elemento de referencia
     steps.each(function(index, step) {
-        if ($(step).text() === title) {
-            $('.wizard').steps('remove', index-1);
+        if ($(step).text() === referenceTitle) {
+            referenceIndex = index;
             return false;
         }
     });
+
+    if (referenceIndex === -1) {
+        console.error("Elemento de referencia no encontrado");
+        return;
+    }
+
+    // Determinar el índice de inserción
+    var insertIndex = before ? referenceIndex - 1 : referenceIndex;
+    insertIndex = (number < 50) ? number : insertIndex;
+
+    // Insertar el nuevo paso
+    var $form_wizard = (caja.modal_tipe == 'create') ? $('.wizard') : $('.wizard_cobrar_venta');
+    console.log({insertIndex})
+    $form_wizard.steps('insert', insertIndex, {
+        title: newTitle,
+        content: content
+    });
 }
 
+function removeStepByTitle(title) {
+    var steps = (caja.modal_tipe == 'create') ? $('.wizard').find('h3') : $('.wizard_cobrar_venta').find('h3');
+    var stepsToRemove = [];
 
+    // Primero encontramos todos los índices de los pasos con el título especificado
+    steps.each(function(index, step) {
+        if ($(step).text() === title) {
+            stepsToRemove.push(index);
+        }
+    });
 
-
+    // Luego eliminamos los pasos desde el último hasta el primero para no alterar los índices
+    for (var i = stepsToRemove.length - 1; i >= 0; i--) {
+        var index = stepsToRemove[i];
+        console.log({index});
+        if(caja.modal_tipe == 'create'){
+            $('.wizard').steps('remove', index-1);
+        }else{
+            $('.wizard_cobrar_venta').steps('remove', index);
+        }
+    }
+}
 
 // Inicializar la caja
 let caja = new Caja();
-
-
-// -----------------------------------------------------------------
-// ACCESORIOS
-// -----------------------------------------------------------------
-
-// BOTOBES VER FACTURA
-// $(document).on('click', '.list-actions', function () {
-//     var getDataInvoiceAttr = $(this).attr("data-invoice-id");
-//     var getParentDiv = $(this).parents(".doc-container");
-
-//     var $el = $("." + this.id).show();
-//     $("#ct > div").not($el).hide();
-//     var setInvoiceNumber = getParentDiv
-//         .find(".invoice-inbox .inv-number")
-//         .text("#" + getDataInvoiceAttr);
-//     var showInvHeaderSection = getParentDiv
-//         .find(".invoice-inbox .invoice-header-section")
-//         .css("display", "flex");
-//     var showInvContentSection = getParentDiv
-//         .find(".invoice-inbox #ct")
-//         .css("display", "block");
-//     var showInvContentSection = getParentDiv
-//         .find(".invoice-inbox")
-//         .css("height", "calc(100vh - 232px)");
-//     var hideInvEmptyContent = getParentDiv
-//         .find(".invoice-inbox .inv-not-selected")
-//         .css("display", "none");
-//     var hideInvEmptyContent = getParentDiv
-//         .find(".invoice-container .inv--thankYou")
-//         .css("display", "block");
-//     if ($(this).parents(".tab-title").hasClass("open-inv-sidebar")) {
-//         $(this).parents(".tab-title").removeClass("open-inv-sidebar");
-//     }
-//     $btns_facturas_ventas.removeClass("active");
-//     $(this).addClass("active");
-
-//     var myDiv = document.getElementsByClassName("invoice-inbox")[0];
-//     myDiv.scrollTop = 0;
-// });
-
 
 // -----------------------------------------------------------------
 // ACCESORIOS
@@ -114,9 +112,6 @@ const ps = new PerfectScrollbar(".inv-list-container", {
     suppressScrollX: true,
 });
 
-// const inv_container = new PerfectScrollbar(".invoice-inbox", {
-//     suppressScrollX: true,
-// });
 
 if (window.innerWidth >= 768) {
     // const inv_container = new PerfectScrollbar(".invoice-inbox", {
@@ -157,13 +152,14 @@ function actualizarUI(elemento, mostrarNumeroFactura = "") {
 // ============================================
 
 $(".input_cantidad").TouchSpin({
-    initval: 0
+    initval: 0,
+    max: 10000000000000,
 });
 
 $("#input_descuento").TouchSpin({
     prefix: 'S/.',
     min: 0,
-    max: 100,
+    max: 10000000000000,
     step: 0.1,
     decimals: 2,
     boostat: 5,
@@ -175,7 +171,7 @@ $("#input_descuento").TouchSpin({
 $("#input_pago_inicial").TouchSpin({
     prefix: 'S/.',
     min: 0,
-    max: 100,
+    max: 10000000000000,
     step: 0.1,
     decimals: 2,
     boostat: 5,
@@ -203,18 +199,6 @@ new PerfectScrollbar(".inputs-clientes", {
 new PerfectScrollbar(".inputs-nueva-venta", {
     suppressScrollX: true,
 });
-
-// new PerfectScrollbar("#productos", {
-//     suppressScrollX: true,
-// });
-
-// new PerfectScrollbar("#servicios", {
-//     suppressScrollX: true,
-// });
-
-// new PerfectScrollbar("#kits", {
-//     suppressScrollX: true,
-// });
 
 // -----------------------------------------------------------------
 // MODAL

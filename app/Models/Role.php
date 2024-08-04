@@ -29,7 +29,7 @@ class Role extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'role_user')
-                    ->withPivot('assigned_at')  // Incluir la fecha de asignación si es relevante
-                    ->withTimestamps();         // Gestiona automáticamente los campos created_at y updated_at de la tabla pivot
+                    ->withPivot('assigned_at')
+                    ->withTimestamps();
     }
 }
