@@ -58,8 +58,7 @@
 - [  ] funciónm para check de servicios
 - [  ] modulo de consulta de productos multitienda
 - [  ] Revisar informe de cliente en boleta de venta
-- [  ] 
-- [  ] 
+- [  ] Cuando cOrdenar ventas adecuadamente
 - [  ] 
 - [  ] 
 - [  ] 
@@ -80,3 +79,13 @@
 admin
 admin@casagas.com
 conejito12
+
+
+BD
+sistemav_nsistemacasagas
+
+user
+sistemav_nsistemacasagas_victor
+
+pass
+sistemav_nsistemacasagas

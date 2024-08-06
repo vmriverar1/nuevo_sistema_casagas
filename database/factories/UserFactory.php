@@ -25,9 +25,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => "Victor Rivera",
-            'password' => Hash::make('password'), // Contraseña por defecto
-            'email' => "vmriverar1@gmail.com",
+            'name' => "Zosimo Admin",
+            'password' => Hash::make('conejito12'), // Contraseña por defecto
+            'email' => "admin@casagas.com",
             'document' => "48193275",
             'phone' => "983755455",
             'address' => $this->faker->address,
