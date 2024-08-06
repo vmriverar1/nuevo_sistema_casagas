@@ -42,58 +42,122 @@ const paso_agregar_botones = `
 </section>
 `;
 
-function createStepByTitle(newTitle, referenceTitle, before, content, number = 1000) {
-    var steps = (caja.modal_tipe == 'create') ? $('.wizard').find('h3') : $('.wizard_cobrar_venta').find('h3');
-    var referenceIndex = -1;
+// createStepByTitle("Pago", "Detalle", false, paso_agregar_botones);
+function createStepByTitle($modal, newTitle, referenceTitle, before, content, number = 1000) {
+    console.group("Crear Paso");
 
-    // Buscar el índice del elemento de referencia
-    steps.each(function(index, step) {
-        if ($(step).text() === referenceTitle) {
-            referenceIndex = index;
-            return false;
+    try {
+        console.log("Título nuevo paso:", newTitle);
+        console.log("Título referencia:", referenceTitle);
+
+        var steps = (caja.modal_tipe == 'create') ? $modal.find('.wizard').find('h3[id^="steps-uid"]') : $modal.find('.wizard_cobrar_venta').find('h3[id^="steps-uid"]');
+        console.log("modal", $modal);
+        console.log("steps", steps);
+        console.log("Pasos encontrados:", steps.length);
+
+        var referenceIndex = -1;
+
+        // Buscar el índice del elemento de referencia
+        steps.each(function(index, step) {
+            if ($(step).text() === referenceTitle) {
+                referenceIndex = index;
+                console.log("Elemento de referencia encontrado en el índice:", referenceIndex);
+                return false;
+            }
+        });
+
+        if (referenceIndex === -1) {
+            console.error("Elemento de referencia no encontrado");
+            console.groupEnd();
+            return;
         }
-    });
 
-    if (referenceIndex === -1) {
-        console.error("Elemento de referencia no encontrado");
-        return;
+        // Determinar el índice de inserción
+        // var insertIndex = before ? referenceIndex - 1 : referenceIndex;
+        var insertIndex = before ? referenceIndex : referenceIndex + 1;
+        console.log("Índice de inserción:", insertIndex);
+        insertIndex = (number < 50) ? number : insertIndex;
+        console.log("Índice de inserción 2:", insertIndex);
+
+        // Insertar el nuevo paso
+        var $form_wizard = (caja.modal_tipe == 'create') ? $modal.find('.wizard') : $modal.find('.wizard_cobrar_venta');
+        console.log("Título nuevo paso:", newTitle);
+        $form_wizard.steps('insert', insertIndex, {
+            title: newTitle,
+            content: content
+        });
+
+        console.log("Nuevo paso insertado en el índice:", insertIndex);
+    } catch (error) {
+        console.error("Error al crear el paso por título:", error);
+    } finally {
+        console.groupEnd();
     }
-
-    // Determinar el índice de inserción
-    var insertIndex = before ? referenceIndex - 1 : referenceIndex;
-    insertIndex = (number < 50) ? number : insertIndex;
-
-    // Insertar el nuevo paso
-    var $form_wizard = (caja.modal_tipe == 'create') ? $('.wizard') : $('.wizard_cobrar_venta');
-    console.log({insertIndex})
-    $form_wizard.steps('insert', insertIndex, {
-        title: newTitle,
-        content: content
-    });
 }
 
-function removeStepByTitle(title) {
-    var steps = (caja.modal_tipe == 'create') ? $('.wizard').find('h3') : $('.wizard_cobrar_venta').find('h3');
-    var stepsToRemove = [];
+function removeStepByTitle($modal, title, attempt = 1) {
+    console.group("Eliminar Paso");
 
-    // Primero encontramos todos los índices de los pasos con el título especificado
-    steps.each(function(index, step) {
-        if ($(step).text() === title) {
-            stepsToRemove.push(index);
-        }
-    });
+    try {
+        console.log("Título del paso a eliminar:", title);
+        console.log("Intento número:", attempt);
 
-    // Luego eliminamos los pasos desde el último hasta el primero para no alterar los índices
-    for (var i = stepsToRemove.length - 1; i >= 0; i--) {
-        var index = stepsToRemove[i];
-        console.log({index});
-        if(caja.modal_tipe == 'create'){
-            $('.wizard').steps('remove', index-1);
-        }else{
-            $('.wizard_cobrar_venta').steps('remove', index);
+        var steps = (caja.modal_tipe == 'create') ? $modal.find('.wizard').find('h3[id^="steps-uid"]') : $modal.find('.wizard_cobrar_venta').find('h3[id^="steps-uid"]');
+        console.log("Pasos encontrados:", steps.length);
+
+        var stepsToRemove = [];
+
+        // Encontrar todos los índices de los pasos con el título especificado
+        steps.each(function(index, step) {
+            if ($(step).text() === title) {
+                stepsToRemove.push(index);
+                console.log("Paso a eliminar encontrado en el índice:", index);
+            }
+        });
+
+        if (stepsToRemove.length === 0) {
+            console.warn("No se encontraron pasos con el título especificado:", title);
+            console.groupEnd();
+            return;
         }
+
+        console.log("Pasos a eliminar:", stepsToRemove);
+
+        // Eliminar el primer paso encontrado y llamar recursivamente a la función
+        var index = stepsToRemove[0];
+        if (caja.modal_tipe == 'create') {
+            $modal.find('.wizard').steps('remove', index);
+            console.log("Paso eliminado en el índice:", index);
+        } else {
+            $modal.find('.wizard_cobrar_venta').steps('remove', index);
+            console.log("Paso eliminado en el índice:", index);
+        }
+
+        // Determinar el protocolo de repetición basado en el número de intentos
+        if (attempt < 2) {
+            removeStepByTitle($modal, title, attempt + 1);
+        } else if (attempt < 4) {
+            // Siguientes 2 intentos con 1 segundo de retraso
+            setTimeout(() => {
+                removeStepByTitle($modal, title, attempt + 1);
+            }, 500);
+        } else if (attempt < 6) {
+            // Siguientes 2 intentos con 1 segundo de retraso
+            setTimeout(() => {
+                removeStepByTitle($modal, title, attempt + 1);
+            }, 1000);
+        } else {
+            console.error("Se alcanzó el número máximo de intentos para eliminar el paso con el título:", title);
+        }
+
+    } catch (error) {
+        console.error("Error al eliminar el paso por título:", error);
+    } finally {
+        console.groupEnd();
     }
 }
+
+
 
 // Inicializar la caja
 let caja = new Caja();

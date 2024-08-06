@@ -6,6 +6,7 @@ class Caja {
     constructor() {
         this.initCaja();
         this.initListeners();
+        this.productPromises = {}
     }
 
     // -----------------------------------------------------------------
@@ -13,6 +14,7 @@ class Caja {
     // -----------------------------------------------------------------
 
     initCaja() {
+        this.modal = (this.modal_tipe == 'create') ? $('#modal-cerrar-venta') : $('#modal-cobrar-venta');
         this.document_required = false;
         this.accion = 'venta';
         this.status = '';
@@ -56,6 +58,8 @@ class Caja {
     }
 
     setCash(cashData) {
+        this.modal = $('#modal-cerrar-venta');
+        // this.modal = (this.modal_tipe == 'create') ? $('#modal-cerrar-venta') : $('#modal-cobrar-venta');
         // ESTADO
         this.status = cashData.status;
         // CLIENTE
@@ -124,7 +128,7 @@ class Caja {
 
     verificarRequirements() {
 
-        removeStepByTitle("Productos");
+        removeStepByTitle(this.modal, "Productos");
 
         let html_generado = '<section>';
         this.products.forEach(product => {
@@ -189,11 +193,11 @@ class Caja {
                 });
                 // CAMBIAMOS EL DOM
                 $("#name_client").html(data.name);
-                $('#modal_cliente').html(`<span>${data.name}</span>`);
+                $('.modal_cliente').html(`<span>${data.name}</span>`);
                 $("#div_car_registration").show();
                 $("#document_client").val(data.document);
                 $("#document_client").prop('disabled', true);
-                removeStepByTitle("Agregar cliente");
+                removeStepByTitle(this.modal, "Agregar cliente");
             })
             .catch((error) => {
                 // AGREGAMOS LOS DATOS AL OBJETO
@@ -201,9 +205,9 @@ class Caja {
                 this.customer_name = '';
                 // AGREGAMOS LOS DATOS AL OBJETO
                 this.customer_id = $("#document_client").val();
-                $('#modal_cliente').html(`<span></span>`);
+                $('.modal_cliente').html(`<span></span>`);
 
-                removeStepByTitle("Agregar cliente");
+                removeStepByTitle(this.modal, "Agregar cliente");
 
                 if (error.response.status === 404) {
                     // CAMBIAMOS EL DOM
@@ -219,7 +223,7 @@ class Caja {
                     // CAMBIAMOS EL DOM
                     $("#document_client").val("");
                     $("#div_car_registration").hide();
-                    $('#modal_cliente').html(`<span></span>`);
+                    $('.modal_cliente').html(`<span></span>`);
                     // ALERTA DE ERROR
                     alert("Ocurrió un error en la consulta de documentos, vuelve a intentarlo");
                 }
@@ -293,15 +297,27 @@ class Caja {
     }
 
     obtenerProducto(id) {
+        if (this.productPromises[id]) {
+            // Si ya hay una promesa en curso para este producto, esperar a que se complete
+            return this.productPromises[id].then((existingProduct) => {
+                console.log(existingProduct);
+                existingProduct.quantity++;
+                this.actualizarCantidadProducto(id, existingProduct.quantity);
+                $(`input[data=${id}]`).val(existingProduct.quantity).trigger('change');
+            });
+        }
+
         let existingProduct = this.products.find(p => p.id === id);
         if (existingProduct) {
             console.log(existingProduct);
             existingProduct.quantity++;
             this.actualizarCantidadProducto(id, existingProduct.quantity);
             $(`input[data=${id}]`).val(existingProduct.quantity).trigger('change');
-            return;
+            return Promise.resolve();
         }
-        axios.get('/producto/' + id)
+
+        // Si no existe el producto en local, hacer la solicitud y guardar la promesa
+        this.productPromises[id] = axios.get('/producto/' + id)
             .then((response) => {
                 var data = response.data;
                 var uniqueId = `input-cantidad-${data.id}`;
@@ -350,10 +366,19 @@ class Caja {
                 });
 
                 this.agregarProducto(data);
+
+                return data; // Devolver el producto para cualquier suscriptor de la promesa
             })
             .catch((error) => {
                 console.error('Error al obtener producto:', error);
+                throw error; // Propagar el error a cualquier suscriptor de la promesa
+            })
+            .finally(() => {
+                // Borrar la promesa cacheada después de que se complete
+                delete this.productPromises[id];
             });
+
+        return this.productPromises[id];
     }
 
     eliminarProducto(id, element) {
@@ -461,7 +486,7 @@ class Caja {
         $("#name_client").html("Anónimo");
         $("#document_client").prop('disabled', false);
         $("#div_car_registration").hide();
-        $('#modal_cliente').html(`<span></span>`);
+        $('.modal_cliente').html(`<span></span>`);
 
         await this.destroyComponents($modal);
         await this.initializeComponents($modal);
@@ -503,12 +528,18 @@ class Caja {
             $modal.find(".input-group-prepend").remove();
             $modal.find(".input-group-append").remove();
 
+            // adicionales
+            $('#money_advance').remove();
+
             resolve();
         });
     }
 
     async initializeComponents($modal) {
+
+
         return new Promise((resolve) => {
+
             // Inicializar wizard
             var $wizard = (this.modal_tipe == 'create') ? $modal.find('.wizard') : $modal.find('.wizard_cobrar_venta');
             var $form = $modal.find('form');
@@ -700,6 +731,9 @@ class Caja {
         this.total = amount - discount + tax - adelantos_acumulados;
         this.total = this.formatPrice(this.total);
 
+        // ACTUALIZAMOS CLIENTES
+        $(".modal_cliente").html(`<span>${this.customer_name}</span>`);
+
         // ACTUALIZAMOS EL DOM
         $('#total-amount').text("Cobrar: S/." + this.formatPrice(amount));
         $('#total-tax').text(this.formatPrice(tax));
@@ -771,11 +805,11 @@ class Caja {
         });
 
         if(html_producto_generado == ''){
-            removeStepByTitle("Productos");
+            removeStepByTitle(this.modal, "Productos");
             return;
         }
 
-        createStepByTitle("Productos", "Detalle", true, html_producto_generado);
+        createStepByTitle(this.modal,"Productos", "Detalle", true, html_producto_generado);
     }
 
     actualizarPagoReq(){
@@ -792,7 +826,7 @@ class Caja {
 
 
         if(this.payment_method == "ninguno" || payment_data.requirements.length == 0){
-            removeStepByTitle("Finalizar");
+            removeStepByTitle(this.modal, "Finalizar");
             return;
         }
 
@@ -832,7 +866,7 @@ class Caja {
             }
         }
 
-        createStepByTitle("Finalizar", "Pago", false, html_pago_generado);
+        createStepByTitle(this.modal,"Finalizar", "Pago", false, html_pago_generado);
     }
 
     actualizarProductosModal() {
@@ -872,7 +906,7 @@ class Caja {
         $("#document_client").val("");
         $("#document_client").prop('disabled', false);
         $("#div_car_registration").hide();
-        $('#modal_cliente').html(`<span></span>`);
+        $('.modal_cliente').html(`<span></span>`);
         $('.inputs-nueva-venta').children('.nav-item').remove();
         $('#total-amount').text("Cobrar: S/.0.00");
         $('#total-tax').text(this.formatPrice(0));
@@ -912,9 +946,9 @@ class Caja {
             if (documentValue.length == 8) {
                 this.buscarCliente();
             }else{
-                removeStepByTitle("Agregar cliente");
+                removeStepByTitle(this.modal, "Agregar cliente");
                 $("#div_car_registration").hide();
-                $('#modal_cliente').html(`<span></span>`);
+                $('.modal_cliente').html(`<span></span>`);
             }
         });
 
@@ -926,15 +960,15 @@ class Caja {
             this.status = $(e.currentTarget).val();
             console.log(this.status);
             // REINICIAR STEPS
-            removeStepByTitle("Productos");
-            removeStepByTitle("Pago");
-            removeStepByTitle("Finalizar");
+            removeStepByTitle(this.modal, "Productos");
+            removeStepByTitle(this.modal, "Pago");
+            removeStepByTitle(this.modal, "Finalizar");
             $('#money_advance').remove();
             $('.div_adelanto_modal').hide();
 
             if(this.status == 'in_parts'){
 
-                createStepByTitle("Pago", "Detalle", false, paso_agregar_botones);
+                createStepByTitle(this.modal,"Pago", "Detalle", false, paso_agregar_botones);
                 this.actualizarProductosReq();
                 this.actualizarPagoReq();
 
@@ -945,7 +979,7 @@ class Caja {
 
             }else if(this.status == 'charged'){
 
-                createStepByTitle("Pago", "Detalle", false, paso_agregar_botones);
+                createStepByTitle(this.modal,"Pago", "Detalle", false, paso_agregar_botones);
                 this.actualizarProductosReq();
                 this.actualizarPagoReq();
                 $('.div_adelanto_modal').hide();
@@ -959,15 +993,15 @@ class Caja {
         $(document).on('change', '#status_sale_pay', (e) => {
 
             this.status = $(e.currentTarget).val();
-            removeStepByTitle("Productos");
-            removeStepByTitle("Pago");
-            removeStepByTitle("Finalizar");
+            removeStepByTitle(this.modal, "Productos");
+            removeStepByTitle(this.modal, "Pago");
+            removeStepByTitle(this.modal, "Finalizar");
             $('#money_advance').remove();
             $('.div_adelanto_modal').hide();
 
             if(this.status == 'in_parts'){
 
-                createStepByTitle("Pago", "Detalle", false, paso_agregar_botones, 2);
+                createStepByTitle(this.modal,"Pago", "Detalle", false, paso_agregar_botones, 2);
                 this.actualizarProductosReq();
                 this.actualizarPagoReq();
                 $('#div_payment_type_sale').append(`
@@ -977,7 +1011,7 @@ class Caja {
 
             }else if(this.status == 'charged'){
 
-                createStepByTitle("Pago", "Detalle", false, paso_agregar_botones, 2);
+                createStepByTitle(this.modal,"Pago", "Detalle", false, paso_agregar_botones, 2);
                 this.actualizarProductosReq();
                 this.actualizarPagoReq();
 
@@ -1134,6 +1168,32 @@ class Caja {
         });
 
         $(document).on('click', '.caja-panel-cerrar-venta', (e) => {
+
+            // verificar que el total no sea menor que los adelantos
+            // =====================================================
+            const amount = this.formatNumber(this.amount);
+            const discount = this.formatNumber(this.discount);
+            const tax = this.formatNumber(this.tax);
+
+            console.log(caja.advances.length + ">" + 0, caja.advances.length > 0)
+            if(caja.advances.length > 0){
+                let advances = caja.money_advance;
+                caja.advances.forEach((advance) => {
+                    let adelanto = parseFloat(advance.advance_amount);
+                    advances += adelanto;
+                });
+                let deuda_final = (amount - discount + tax) - advances;
+
+                console.log(deuda_final + '<' + 0, deuda_final < 0);
+
+                if(deuda_final < 0){
+                    alert('Los delantos son mayores al total de la venta. Agregue productos para poder realizar la venta');
+                    return;
+                }
+            }
+
+            // ejecuramos el modal
+            // ===================
             this.modal_tipe = (caja.accion == 'venta') ? 'create' : 'edit';
 
             if (this.products.length > 0) {

@@ -331,7 +331,7 @@
                                                 <div class="t-uppercontent">
                                                     <h5>Cliente</h5>
                                                 </div>
-                                                <p id="modal_cliente"><span>Juan valder</span> (pago contado)</p>
+                                                <p class="modal_cliente"><span>Juan valder</span> (pago contado)</p>
                                                 <div class="tags">
                                                     {{-- <div class="badge badge-primary">Matricula: AA-100</div>
                                                     <div class="badge badge-success">Nuevo</div> --}}
@@ -594,7 +594,7 @@
                                                 <div class="t-uppercontent">
                                                     <h5>Cliente</h5>
                                                 </div>
-                                                <p id="modal_cliente"><span>Juan valder</span> (pago contado)</p>
+                                                <p class="modal_cliente"><span>Juan valder</span> (pago contado)</p>
                                                 <div class="tags">
                                                     {{-- <div class="badge badge-primary">Matricula: AA-100</div>
                                                     <div class="badge badge-success">Nuevo</div> --}}
@@ -828,7 +828,7 @@
                                             <div class="t-uppercontent">
                                                 <h5>Cliente</h5>
                                             </div>
-                                            <p id="modal_cliente"><span>Juan valder</span> (pago contado)</p>
+                                            <p class="modal_cliente"><span>Juan valder</span> (pago contado)</p>
                                             <div class="tags">
                                                 {{-- <div class="badge badge-primary">Matricula: AA-100</div>
                                                 <div class="badge badge-success">Nuevo</div> --}}

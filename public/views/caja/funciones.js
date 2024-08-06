@@ -355,6 +355,24 @@ function actualizarListaVentas(ventas) {
 }
 
 function submitFormPay(formSelector) {
+
+    let currentValue = $('#input_recibido_modal') ? $('#input_recibido_modal').val() : 0;
+    let pagoCliente = parseFloat(currentValue);
+    var total_calcular = (caja.status === 'in_parts' || caja.money_advance > 0) ? (caja.formatNumber(caja.money_advance) + caja.formatNumber(caja.payment_method)) : (caja.formatNumber(caja.total) + caja.formatNumber(caja.payment_method));
+
+    // detectar si el input con la clase input_recibido_modal no esta vacio
+    if ($("#input_recibido_modal").val() == '') {
+        alert('Debe ingresar el monto recibido');
+        return;
+    }
+
+    if (pagoCliente < total_calcular) {
+        alert('El monto recibido es menor al total');
+        return;
+    }
+
+    // Procesar venta
+    // =======================================
     const $form = $(formSelector);
     const formData = new FormData();
 
@@ -405,8 +423,10 @@ function submitFormPay(formSelector) {
             caja.resetCash();
         }
 
+        // limpiamos el modal de cierre de venta
+        clearWizard("Pago", $("#modal-cobrar-venta"));
+
         cargarProductos();
-        cargarServicios();
         cargarPaquetes();
     })
     .catch(error => {
@@ -419,6 +439,23 @@ function submitFormPay(formSelector) {
 
 function updateFormPay(formSelector,route) {
 
+    let currentValue = $('#input_recibido_modal') ? $('#input_recibido_modal').val() : 0;
+    let pagoCliente = parseFloat(currentValue);
+    var total_calcular = (caja.status === 'in_parts' || caja.money_advance > 0) ? (caja.formatNumber(caja.money_advance) + caja.formatNumber(caja.payment_method)) : (caja.formatNumber(caja.total) + caja.formatNumber(caja.payment_method));
+
+    // detectar si el input con la clase input_recibido_modal no esta vacio
+    if ($("#input_recibido_modal").val() == '') {
+        alert('Debe ingresar el monto recibido');
+        return;
+    }
+
+    if (pagoCliente < total_calcular) {
+        alert('El monto recibido es menor al total');
+        return;
+    }
+
+    // Procesar venta
+    // =======================================
     const $form = $(formSelector);
     const formData = new FormData();
 
@@ -464,19 +501,27 @@ function updateFormPay(formSelector,route) {
         $("#modal-cobrar-venta").find('.wizard').find('.actions ul').find('.btn-next').prop('disabled', false);
         // Cerrar el modal si está dentro de uno
         $("#modal-cobrar-venta").modal('hide');
-        // Limpiar caja
-        if (caja && typeof caja.resetCash === 'function') {
-            caja.resetCash();
-        }
-
         $(".ver_ventas").click();
 
         const venta_id = response.data.id;
 
         axios.get('/traer-venta/' + venta_id)
             .then(response => {
+
                 const data = response.data;
+                data.accion = 'ver_venta';
+                data.modal_tipe = 'cobrar';
+                caja.resetCash();
+                console.log(data);
+
+                caja.setCash(data);
+                caja.id_venta = data.id;
+
                 renderVenta(data);
+                clearWizard("Pago", $("#modal-cobrar-venta"));
+
+                cargarProductos();
+                cargarPaquetes();
             })
             .catch(error => {
                 console.error('Error al obtener la venta:', error);
@@ -548,8 +593,19 @@ function updateFormProduct(formSelector,route) {
         const venta_id = response.data.id;
         axios.get('/traer-venta/' + venta_id)
             .then(response => {
+
                 const data = response.data;
+                data.accion = 'ver_venta';
+                data.modal_tipe = 'cobrar';
+                caja.resetCash();
+
+                caja.setCash(data);
+                caja.id_venta = data.id;
+
                 renderVenta(data);
+
+                cargarProductos();
+                cargarPaquetes();
             })
             .catch(error => {
                 console.error('Error al obtener la venta:', error);
@@ -637,6 +693,9 @@ function deleteDataForm(route, $form) {
                 console.log("Venta anulada exitosamente:", response);
                 $('#modal-anular-venta').modal('hide');
                 $(".ver_ventas").click();
+
+                cargarProductos();
+                cargarPaquetes();
             },
             error: function(xhr) {
                 // Maneja el error del servidor aquí
@@ -654,6 +713,8 @@ async function paySale(route) {
 async function paySaleDest(){
 
     return new Promise((resolve) => {
+
+        caja.modal = $('#modal-cobrar-venta');
         // Destruir wizard
         var $modal = $('#modal-cobrar-venta');
         var $wizard = $modal.find('.wizard_cobrar_venta');
@@ -689,6 +750,9 @@ async function paySaleDest(){
         // destruir botones de Touchsan
         $modal.find(".input-group-prepend").remove();
         $modal.find(".input-group-append").remove();
+
+        // adicionales
+        $('#money_advance').remove();
 
         resolve();
     });
@@ -832,6 +896,9 @@ async function paySaleInit(route){
         caja.actualizarProductosModal();
 
         $modal.modal('show');
+
+        // Asignar los valores de caja_antigua a caja
+        caja.status = caja.status_antiguo;
         resolve();
     });
 }
@@ -879,6 +946,9 @@ async function productSaleDest(){
         // destruir botones de Touchsan
         $modal.find(".input-group-prepend").remove();
         $modal.find(".input-group-append").remove();
+
+        // adicionales
+        $('#money_advance').remove();
 
         resolve();
     });
@@ -1173,6 +1243,7 @@ function editSale(route) {
     // actualizamos el select de tipo de venta
     caja.actualizarStepsWizard();
     caja.accion = 'editar_venta';
+    caja.modal = $("#modal-cobrar-venta");
 }
 
 // ============================================
@@ -1270,4 +1341,14 @@ function formatDate(dateString) {
     const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', options).replace(',', '');
+}
+
+// =============================================
+// FORMULARIO
+// =============================================
+
+async function clearWizard(title, $modal) {
+    await caja.destroyComponents($modal);
+    await caja.initializeComponents($modal);
+    removeStepByTitle($modal, title);
 }

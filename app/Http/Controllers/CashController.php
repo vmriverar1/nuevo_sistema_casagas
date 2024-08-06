@@ -501,6 +501,13 @@ class CashController extends Controller
             $venta->status = $validatedData['status'];
             $venta->amount = $monto;
             $venta->total = $total;
+
+            if ($venta->status == 'in_parts' && $total == 0) {
+                $venta->status = 'charged';
+                $venta->total = $monto  + $new_request["tax"] - $new_request["discount"] - $new_request["money_advance"];
+            }
+
+
             $venta->save();
             Log::info('Venta actualizada exitosamente.', ['venta_id' => $venta->id]);
 

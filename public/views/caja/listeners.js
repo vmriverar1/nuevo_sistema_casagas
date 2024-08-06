@@ -65,11 +65,14 @@ $(document).on('click', '.ver_ventas', function () {
     $(".inputs-ventas").attr("style", "display: block !important");
     $('.inputs-compras').children().remove();
     $("#background-productos").attr("style", "display: none !important");
+
     $("#background-facturas-head").remove();
     $("#background-facturas-body").remove();
 
     searchAndUpdate('/buscar-venta', 'vacio', '.inputs-ventas');
     actualizarInput("sale");
+
+    this.modal = $('#modal-cerrar-venta');
 });
 
 // BOTON COMPRAS
@@ -88,6 +91,7 @@ $(document).on('click', '.ver_compras', function () {
 
     $("#background-facturas-head").remove();
     $("#background-facturas-body").remove();
+
     searchAndUpdate('/buscar-compra', 'vacio', '.inputs-compras');
     actualizarInput("purchase");
 });
@@ -113,6 +117,7 @@ $(document).on('click', '.nueva_venta', function () {
 
     $("#background-facturas-head").remove();
     $("#background-facturas-body").remove();
+
     actualizarInput("product");
 });
 
@@ -123,10 +128,24 @@ function actualizarInput(tipo) {
     const tipos = ["sale", "purchase", "client", "product"];
     tipos.forEach(t => $searchInput.removeClass(`search_${t}`));
 
+    if(tipo === "sale") {
+        destroyComponents($("#modal-cerrar-venta"));
+        initializeComponents($("#modal-cerrar-venta"));
+        removeStepByTitle(caja.modal, "Pago");
+    }
+
     if (tipo === "product") {
         $searchInput.attr("list", "suggestions");
+
+        // limpiamos el modal de cierre de venta
+        destroyComponents($("#modal-cobrar-venta"));
+        initializeComponents($("#modal-cobrar-venta"));
+        removeStepByTitle(caja.modal, "Pago");
+
+        caja.modal = $("#modal-cerrar-venta");
     } else {
         $searchInput.removeAttr("list");
+        caja.modal = $("#modal-cobrar-venta");
     }
 
     $("#suggestions").html("");
@@ -153,6 +172,7 @@ $(document).on('click', '.abrir_venta', function () {
 
             caja.setCash(data);
             caja.id_venta = data.id;
+            caja.status_antiguo = data.status;
 
             $("#background-facturas-head").remove();
             $("#background-facturas-body").remove();

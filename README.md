@@ -2,6 +2,11 @@
 
 ## Pendienters
 
+### Productos
+
+- [  ] Al traer un kit este no trar productos
+- [  ] cambiar paquete  a kit
+
 ### Caja
 - [ x ] Modal por cobrar quitar descuentos, métodos de pago y documentos
 - [ x ] Revisar volver a guardar rápido en proceso
@@ -20,39 +25,39 @@
 - [ x ] Revisar buscador de productos
 - [ x ] Cambiar la palabra Total a por pagar en venta en proceso
 - [ x ] Boton x de modal para cerrar modal
-- [  ] Revisar calculador antes de terminar venta
-- [  ] No abre modal por segunda vez
-- [  ] revisar adelanto aveces no se actualiza correctamente en obj caja
-- [  ] Verificar descuento de productos
-- [  ] Revisar si al agregar adelanto en modal las restricciones son correctas
-- [  ] Agregaar restricciones para adelantos en controlador
-- [  ] desde el controlador antes de actualizar y guardar se debe verificar el monto y el total
+- [ x ] Revisar calculador antes de terminar venta
+- [ x ] No abre modal por segunda vez
+- [ x ] Tras dar varios adelantos no se guarda
+- [ x ] revisar adelanto aveces no se actualiza correctamente en obj caja
+- [ x ] Revisar si al agregar adelanto en modal las restricciones son correctas
+- [ x ] desde el controlador antes de actualizar y guardar se debe verificar el monto y el total
+- [ x ] No puedo eliminar varias ventas seguidas sin que se malogre wizard
+- [ x ] Al editar una venta en partes debe probarse desde el controlador y js que al eliminar un producto no afecte el total y adelantos
+- [ x ] Agregaar restricciones para adelantos en controlador
+- [ x ] Al editar ventas en nombre de cliente no me sale el nombre que deberia
+- [ x ] En algun momento cambia las ventas es que al poner select y despues cerrar la venta editada se cambia a charged o la última editada
+- [ x ] Al hacer click muy rápido en el botón para agregar productos se duplica y la segunda vez sale desconfigurado
+- [ x ] Aveces no trae la venta al darle click en el lapiz
+- [ x ] Revisar  que al hacer venta en partes que al quitarse productos no afecte los adelantos
+- [ x ] Comprobar stock con error desde controlador
+- [ - ] Agregar alert con respueta del servidor
+- [ x ] Revisar gestión de productos al crear, editar o eliminar ventas en partes
+- [ x ] Revisar gestión de productos al crear, editar o eliminar ventas cobradas
 - [  ] verificar cantidades en caja
-- [  ] Al editar una venta en partes debe probarse desde el controlador y js que al eliminar un producto no afecte el total y adelantos
-- [  ] Agregar alert con respueta del servidor
 - [  ] Revisar gestión de caja al crear, editar o eliminar ventas en partes
-- [  ] Revisar gestión de productos al crear, editar o eliminar ventas en partes
 - [  ] Revisar gestión de caja al crear, editar o eliminar ventas cobradas
-- [  ] Revisar gestión de productos al crear, editar o eliminar ventas cobradas
-- [  ] No puedo eliminar varias ventas seguidas sin que se malogre wizard
-- [  ] Al editar ventas en nombre de cliente no me sale el nombre que deberia
-- [  ] Tras dar varios adelantos no se guarda
-- [  ] Activar opción de requerir placa en un producto y probar
 - [  ] Verificar stock al trabajar con paquetes
 - [  ] servicios con precios personalizados
-- [  ] Revisar informe de cliente en boleta de venta
-- [  ] funciónm para check de servicios
-- [  ] modulo de consulta de productos multitienda
 - [  ] Descxuento libre en ventas
 - [  ] Pagos o gastos en caja
-- [  ] Comprobar stock con error desde controlador
 - [  ] Descontando doble producto
 - [  ] Hacer venta creando usuario
+- [  ] Activar opción de requerir placa en un producto y probar
+- [  ] Verificar descuento de productos
 - [  ] Revisar calculadora antes de terminar venta cuando hay descuento
-- [  ] 
-- [  ] 
-- [  ] 
-- [  ] 
+- [  ] funciónm para check de servicios
+- [  ] modulo de consulta de productos multitienda
+- [  ] Revisar informe de cliente en boleta de venta
 - [  ] 
 - [  ] 
 - [  ] 

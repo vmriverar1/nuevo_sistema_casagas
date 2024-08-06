@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\Historial;
+use App\Models\PettyCash;
 use Illuminate\Support\Str;
+use App\Helpers\CashhHelper;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
@@ -97,6 +99,18 @@ class SaleController extends Controller
 
             // Cambiar el estado de la venta a 'cancelled'
             $sale->update(['status' => 'cancelled']);
+
+            // Devolver el stock de los productos
+            foreach ($sale->products as $product) {
+                CashhHelper::devolverStock($product);
+            }
+
+            // Devolver el dinero a la caja
+            $caja = PettyCash::find($sale->petty_cashes_id);
+            if ($sale->status == 'in_parts' || $sale->status == 'in_process' || $sale->status == 'charged') {
+                $caja->income -= $sale->total;
+                $caja->save();
+            }
 
             // Confirmar la transacción
             DB::commit();

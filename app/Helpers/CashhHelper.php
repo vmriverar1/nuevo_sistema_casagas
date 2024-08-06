@@ -143,8 +143,11 @@ class CashhHelper
 
     public static function gestion_producto($request, $saleId)
     {
+        Log::info("Los productos son", $request["products"]);
         self::executeTransaction(function () use ($request, $saleId) {
             foreach ($request["products"] as $product) {
+                Log::info("---------------------------------------");
+                Log::info("El producto es {$product['id']}");
                 self::processProduct($product, $saleId, $request);
             }
         }, "Error gestionando productos en venta.");
@@ -184,6 +187,13 @@ class CashhHelper
 
     private static function processProduct($product, $saleId, $request)
     {
+        // Verificar si la cantidad actual en el stock es suficiente
+        $productModel = Product::find($product['id']);
+        if ($productModel->stock < $product['quantity']) {
+            throw new \Exception("No hay suficiente stock para el producto: " . $product['name']);
+        }
+
+        // Actualizar el stock solo una vez
         self::actualizarStock($product);
         $fileUrl = self::guardarRequerimientos($request, $product);
 
@@ -202,7 +212,15 @@ class CashhHelper
     private static function agregarProducto($saleId, $product, $request)
     {
         self::executeWithErrorHandling(function () use ($saleId, $product, $request) {
+            // Verificar si la cantidad actual en el stock es suficiente
+            $productModel = Product::find($product['id']);
+            if ($productModel->stock < $product['quantity']) {
+                throw new \Exception("No hay suficiente stock para el producto: " . $product['name']);
+            }
+
+            // Actualizar el stock
             self::actualizarStock($product);
+
             $fileUrl = self::guardarRequerimientos($request, $product);
 
             DB::table('sale_products')->insert([
@@ -216,6 +234,11 @@ class CashhHelper
 
     private static function guardarRequerimientos($request, $product)
     {
+        // detectar que exista $product->requirements
+        if (!isset($product->requirements)) {
+            return null;
+        }
+
         // detecta si product es un array y convierte a objeto
         if (is_array($product)) {
             $product = (object) $product;
@@ -254,13 +277,24 @@ class CashhHelper
         self::executeWithErrorHandling(function () use ($product, $quantityDifference) {
             $productModel = Product::find($product['id']);
             $quantity = $quantityDifference ?? $product['quantity'];
+            Log::info("La cantidad es {$quantity}");
 
             if ($productModel->type == "producto") {
+                // Verificar si el stock final sería negativo
+                if ($productModel->stock - $quantity < 0) {
+                    throw new \Exception("Stock insuficiente para el producto: " . $productModel->name);
+                }
+                Log::info("El stock actual es {$productModel->stock}");
                 $productModel->stock -= $quantity;
+                Log::info("El stock final es {$productModel->stock}");
                 $productModel->save();
             } else if ($productModel->type == "paquete") {
                 foreach ($product["products_in_package"] as $productInPackage) {
                     $productPack = Product::find($productInPackage["id"]);
+                    // Verificar si el stock final sería negativo
+                    if ($productPack->stock - $quantity < 0) {
+                        throw new \Exception("Stock insuficiente para el producto en paquete: " . $productPack->name);
+                    }
                     $productPack->stock -= $quantity;
                     $productPack->save();
                 }
@@ -268,7 +302,7 @@ class CashhHelper
         }, "Error actualizando stock.");
     }
 
-    private static function devolverStock($product)
+    public static function devolverStock($product)
     {
         self::executeWithErrorHandling(function () use ($product) {
             $productModel = Product::find($product['id']);
@@ -303,75 +337,6 @@ class CashhHelper
             ->where('sale_id', $saleId)
             ->where('product_id', $productId)
             ->delete();
-    }
-
-    // ================================================================
-    // GESTIÓN DE PRODUCTOS EN COMPRA
-    // ================================================================
-
-    public static function gestion_producto_compra($request, $saleId)
-    {
-        // Iteramos sobre los productos en el request
-        foreach ($request["products"] as $product) {
-
-            // Buscamos si el producto existe
-            $producto = Product::where('id', $product["id"])->first();
-            $requerimientos = $producto->requirements;
-            $quantity = $product["quantity"];
-
-            $new_stock = $producto->stock + $quantity;
-            $producto->stock = $new_stock;
-            $producto->save();
-
-            // Guardamos los archivos de los productos
-            $requerimientoFields = array_filter($request->files->keys(), function ($key) {
-                return strpos($key, 'requerimiento_') === 0;
-            });
-
-            $fileUrl = null;
-
-            foreach ($requerimientoFields as $field) {
-                if ($request->hasFile($field)) {
-                    $file = $request->file($field);
-                    $productName = substr($field, strlen('requerimiento_'));
-                    Log::warning("El nombre de producto es {$productName}");
-                    // Comparamos el nombre del producto
-                    foreach ($requerimientos as $requerimiento) {
-                        if ($requerimiento->name == $productName) {
-                            // Guardamos el archivo en el servidor
-                            $path = "requerimientos/productos/{$productName}";
-                            $filePath = $file->storeAs($path, $file->getClientOriginalName(), 'public');
-                            $fileUrl = Storage::url($filePath);
-                        }
-                    }
-                }
-            }
-
-            // Revisión y actualización/creación del registro en purchase_products
-            $existingSaleProduct = DB::table('purchase_products')
-                ->where('purchase_id', $saleId)
-                ->where('product_id', $product["id"])
-                ->first();
-
-            if ($existingSaleProduct) {
-                // Actualizar la cantidad existente
-                DB::table('purchase_products')
-                    ->where('purchase_id', $saleId)
-                    ->where('product_id', $product["id"])
-                    ->update([
-                        'quantity' => $existingSaleProduct->quantity + $quantity,
-                        'url' => $fileUrl
-                    ]);
-            } else {
-                // Crear un nuevo registro
-                DB::table('purchase_products')->insert([
-                    'purchase_id' => $saleId,
-                    'product_id' => $product["id"],
-                    'quantity' => $quantity,
-                    'url' => $fileUrl
-                ]);
-            }
-        }
     }
 
     // ================================================================
@@ -534,6 +499,10 @@ class CashhHelper
                 'adelantos' => $adelantos,
                 'total' => $total
             ]);
+
+            if ($total < 0) {
+                throw new \Exception("El adelanto es mayor que el total de la venta.");
+            }
 
             return $total;
         }, "Error calculando el total de la venta.");
